@@ -1,5 +1,6 @@
 package com.soasta.jenkins;
 
+import hudson.CopyOnWrite;
 import hudson.Extension;
 import hudson.ProxyConfiguration;
 import hudson.model.AbstractDescribableImpl;
@@ -7,6 +8,7 @@ import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -14,10 +16,14 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Information about a specific CloudTest Server and access credential.
@@ -69,7 +75,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         // if the login succeeds, we'll see a redirect
         Header loc = post.getResponseHeader("Location");
         if (loc!=null && loc.getValue().endsWith("/Central"))
-            return FormValidation.ok();
+            return FormValidation.ok("OK");
 
         if (!post.getResponseBodyAsString().contains("SOASTA"))
             return FormValidation.error(getUrl()+" doesn't look like a CloudTest server");
@@ -92,9 +98,33 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
     @Extension
     public static class DescriptorImpl extends Descriptor<CloudTestServer> {
+
+        @CopyOnWrite
+        private volatile List<CloudTestServer> servers;
+
+        public DescriptorImpl() {
+            load();
+            if (servers==null)  servers=new ArrayList<CloudTestServer>();
+        }
+
         @Override
         public String getDisplayName() {
             return "CloudTest Server";
+        }
+
+        public List<CloudTestServer> getServers() {
+            return servers;
+        }
+
+        public void setServers(Collection<? extends CloudTestServer> servers) {
+            this.servers = new ArrayList<CloudTestServer>(servers);
+        }
+
+
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            req.bindJSON(this,json);
+            return true;
         }
 
         public FormValidation doValidate(@QueryParameter String url, @QueryParameter String username, @QueryParameter String password) throws IOException {

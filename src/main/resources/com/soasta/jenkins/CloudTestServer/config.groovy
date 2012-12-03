@@ -11,6 +11,10 @@ f.entry(title:"User Name",field:"username") {
 f.entry(title:"Password",field:"password") {
     f.password()
 }
-f.block {
-    f.validateButton(method:"validate",with:"url,username,password",title:"Test Connection")
+f.validateButton(method:"validate",with:"url,username,password",title:"Test Connection")
+f.entry {
+    div(align:"right") {
+        input(type:"button",value:"Add",class:"repeatable-add")
+        input(type:"button",value:"Delete",class:"repeatable-delete show-if-not-last")
+    }
 }
