@@ -7,6 +7,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.Header;
@@ -17,13 +18,23 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Information about a specific CloudTest Server and access credential.
@@ -84,6 +95,44 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         return FormValidation.error("Username/password was incorrect");
     }
 
+    /**
+     * Retrieves the build number of this CloudTest server.
+     */
+    public VersionNumber getBuildNumber() {
+        final String[] v = new String[1];
+        try {
+            SAXParser sp = SAXParserFactory.newInstance().newSAXParser();
+            sp.parse(ProxyConfiguration.open(url).getInputStream(),new DefaultHandler() {
+                @Override
+                public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
+                    if (systemId.endsWith(".dtd"))
+                        return new InputSource(new StringReader(""));
+                    return null;
+                }
+
+                @Override
+                public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+                    if (qName.equals("meta")) {
+                        if ("buildnumber".equals(attributes.getValue("name"))) {
+                            v[0] = attributes.getValue("content");
+                            throw new SAXException("found");
+                        }
+                    }
+                }
+            });
+            LOGGER.warning("Build number not found in "+url);
+        } catch (SAXException e) {
+            if (v[0]!=null)
+                return new VersionNumber(v[0]);
+            LOGGER.log(Level.WARNING, "Failed to load "+url, e);
+        } catch (ParserConfigurationException e) {
+            throw new Error(e);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "Failed to load "+url, e);
+        }
+        return null;
+    }
+
     private HttpClient createClient() {
         HttpClient hc = new HttpClient();
         Jenkins j = Jenkins.getInstance();
@@ -131,4 +180,6 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             return new CloudTestServer(url,username,Secret.fromString(password)).validate();
         }
     }
+
+    private static final Logger LOGGER = Logger.getLogger(CloudTestServer.class.getName());
 }
