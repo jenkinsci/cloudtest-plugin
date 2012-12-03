@@ -26,6 +26,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
@@ -143,6 +144,17 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
                 hc.getState().setProxyCredentials(AuthScope.ANY,new UsernamePasswordCredentials(jpc.getUserName(),jpc.getPassword()));
         }
         return hc;
+    }
+
+    public static CloudTestServer get(String url) {
+        List<CloudTestServer> servers = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class).getServers();
+        for (CloudTestServer s : servers) {
+            if (s.getUrl().toExternalForm().equals(url))
+                return s;
+        }
+        // if we can't find any, fall back to the default one
+        if (!servers.isEmpty())     return servers.get(0);
+        return null;
     }
 
     @Extension
