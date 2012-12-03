@@ -5,17 +5,13 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.JDK;
-import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
-import hudson.util.ListBoxModel;
 import hudson.util.QuotedStringTokenizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.inject.Inject;
 import java.io.IOException;
 
 /**
@@ -83,27 +79,7 @@ public class MakeAppTouchTestable extends Builder {
     }
 
     @Extension
-    public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        @Inject
-        CloudTestServer.DescriptorImpl serverDescriptor;
-
-        @Override
-        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return true;
-        }
-
-        public ListBoxModel doFillUrlItems() {
-            ListBoxModel r = new ListBoxModel();
-            for (CloudTestServer s : serverDescriptor.getServers()) {
-                r.add(s.getUrl().toExternalForm());
-            }
-            return r;
-        }
-
-        public boolean showUrlField() {
-            return serverDescriptor.getServers().size()>1;
-        }
-
+    public static class DescriptorImpl extends AbstractCloudTestBuilerDescriptor {
         @Override
         public String getDisplayName() {
             return "Make App TouchTestable";
