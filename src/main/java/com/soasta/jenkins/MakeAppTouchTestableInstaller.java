@@ -32,7 +32,7 @@ public class MakeAppTouchTestableInstaller extends DownloadFromUrlInstaller {
     public Installable getInstallable() throws IOException {
         Installable i = new Installable();
         i.url = new URL(server.getUrl(),"downloads/mobile/MakeAppTouchTestable.zip").toExternalForm();
-        i.id = "cloudtest-makeTouchTestable-"+buildNumber;
+        i.id = id;
         i.name = buildNumber.toString();
         return i;
     }
