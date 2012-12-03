@@ -1,5 +1,6 @@
 package com.soasta.jenkins;
 
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -63,6 +64,8 @@ public class MakeAppTouchTestable extends Builder {
             args.add("java");
 
         CloudTestServer s = getServer();
+        if (s==null)
+            throw new AbortException("No TouchTest server is configured in the system configuration.");
 
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
 
@@ -98,7 +101,7 @@ public class MakeAppTouchTestable extends Builder {
         }
 
         public boolean showUrlField() {
-            return !serverDescriptor.getServers().isEmpty();
+            return serverDescriptor.getServers().size()>1;
         }
 
         @Override

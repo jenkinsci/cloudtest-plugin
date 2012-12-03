@@ -184,7 +184,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
-            req.bindJSON(this,json);
+            setServers(req.bindJSONToList(CloudTestServer.class,json.get("servers")));
+            save();
             return true;
         }
 

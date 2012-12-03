@@ -7,7 +7,7 @@ if (descriptor.showUrlField()) {
         f.select()
     }
 }
-f.entry(title:"XCode Projec File",field:"projectFile") {
+f.entry(title:"XCode Project File",field:"projectFile") {
     f.textbox()
 }
 f.entry(title:"Target",field:"target") {
