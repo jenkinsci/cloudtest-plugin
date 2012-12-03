@@ -69,7 +69,7 @@ public class MakeAppTouchTestable extends Builder {
 
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
 
-        args.add("-jar").add(path.child("MakeAppTouchTestable/MakeAppTouchTestable.jar"))
+        args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
             .add("-project", projectFile)
             .add("-target", target)
