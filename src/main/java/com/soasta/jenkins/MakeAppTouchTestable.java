@@ -18,6 +18,9 @@ import java.io.IOException;
  * @author Kohsuke Kawaguchi
  */
 public class MakeAppTouchTestable extends Builder {
+    /**
+     * URL of {@link CloudTestServer}.
+     */
     private final String url;
     private final String projectFile,target;
     private final String additionalOptions;
