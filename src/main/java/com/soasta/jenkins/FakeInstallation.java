@@ -8,8 +8,8 @@ import java.util.ArrayList;
 /**
  * @author Kohsuke Kawaguchi
  */
-class MakeAppTouchTestableInstallation extends ToolInstallation {
-    public MakeAppTouchTestableInstallation(String name) {
+class FakeInstallation extends ToolInstallation {
+    public FakeInstallation(String name) {
         super(name, null, new ArrayList<ToolProperty<?>>());
     }
 }

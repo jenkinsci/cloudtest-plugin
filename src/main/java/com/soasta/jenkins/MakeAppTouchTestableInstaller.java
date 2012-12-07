@@ -43,7 +43,7 @@ public class MakeAppTouchTestableInstaller extends DownloadFromUrlInstaller {
      */
     public FilePath performInstallation(Node node, TaskListener log) throws IOException, InterruptedException {
         return super.performInstallation(
-                new MakeAppTouchTestableInstallation(id), node, log);
+                new FakeInstallation(id), node, log);
     }
 
     // this is internal use only

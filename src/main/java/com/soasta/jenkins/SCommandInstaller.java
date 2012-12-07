@@ -43,7 +43,7 @@ public class SCommandInstaller extends DownloadFromUrlInstaller {
      */
     public FilePath performInstallation(Node node, TaskListener log) throws IOException, InterruptedException {
         return super.performInstallation(
-                new SCommandInstallation(id), node, log);
+                new FakeInstallation(id), node, log);
     }
 
     public FilePath scommand(Node node, TaskListener log) throws IOException, InterruptedException {
