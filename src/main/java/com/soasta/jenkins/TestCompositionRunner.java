@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2012, CloudBees, Inc.
+ * All Rights Reserved.
+ */
 package com.soasta.jenkins;
 
 import hudson.AbortException;
@@ -77,13 +81,15 @@ public class TestCompositionRunner extends Builder {
             .add("username="+s.getUsername())
             .addMasked("password=" + s.getPassword());
 
-        FilePath xml = new FilePath(build.getWorkspace(),composition+".xml");
+        String fileName = composition + ".xml";
+        if (fileName.startsWith("/"))   fileName=fileName.substring(1);
+        FilePath xml = new FilePath(build.getWorkspace(), fileName);
         xml.getParent().mkdirs(); // make sure the directory exists
         int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(xml.write()).stderr(listener.getLogger()).join();
-        if (r!=0)   return false;
+        if (xml.length()==0)    return false;   // some catastrophic failure
 
         // archive this result
-        JUnitResultArchiver archiver = new JUnitResultArchiver(composition+".xml",true,
+        JUnitResultArchiver archiver = new JUnitResultArchiver(fileName,true,
                 new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP, Collections.singleton(new JunitResultPublisher(null))));
         return archiver.perform(build,launcher,listener);
     }

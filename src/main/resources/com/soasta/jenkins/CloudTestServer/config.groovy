@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2012, CloudBees, Inc.
+ * All Rights Reserved.
+ */
 package com.soasta.jenkins.CloudTestServer;
 
 f=namespace(lib.FormTagLib)
