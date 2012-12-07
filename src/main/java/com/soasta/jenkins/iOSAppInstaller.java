@@ -1,6 +1,7 @@
 package com.soasta.jenkins;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -50,6 +51,8 @@ public class iOSAppInstaller extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         ArgumentListBuilder args = new ArgumentListBuilder();
 
+        EnvVars envs = build.getEnvironment(listener);
+
         CloudTestServer s = getServer();
         if (s==null)
             throw new AbortException("No TouchTest server is configured in the system configuration.");
@@ -57,8 +60,8 @@ public class iOSAppInstaller extends Builder {
         FilePath bin = new iOSAppInstallerInstaller(s).ios_app_installer(build.getBuiltOn(), listener);
 
         args.add(bin)
-            .add("--ipa", ipa);
-        args.add(new QuotedStringTokenizer(additionalOptions).toArray());
+            .add("--ipa", envs.expand(ipa));
+        args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
 
         int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
         return r==0;

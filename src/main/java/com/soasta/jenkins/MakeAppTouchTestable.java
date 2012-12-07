@@ -1,6 +1,7 @@
 package com.soasta.jenkins;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -66,16 +67,18 @@ public class MakeAppTouchTestable extends Builder {
         if (s==null)
             throw new AbortException("No TouchTest server is configured in the system configuration.");
 
+        EnvVars envs = build.getEnvironment(listener);
+
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
 
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
-            .add("-project", projectFile)
-            .add("-target", target)
+            .add("-project", envs.expand(projectFile))
+            .add("-target", envs.expand(target))
             .add("-url").add(s.getUrl())
             .add("-username",s.getUsername())
             .add("-password").addMasked(s.getPassword().getPlainText());
-        args.add(new QuotedStringTokenizer(additionalOptions).toArray());
+        args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
 
         int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
         return r==0;

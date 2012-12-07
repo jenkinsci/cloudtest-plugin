@@ -1,6 +1,7 @@
 package com.soasta.jenkins;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -65,11 +66,13 @@ public class TestCompositionRunner extends Builder {
             throw new AbortException("No TouchTest server is configured in the system configuration.");
 
         FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
+        EnvVars envs = build.getEnvironment(listener);
+        String composition = envs.expand(this.composition);
 
         ArgumentListBuilder args = new ArgumentListBuilder();
         args.add(scommand)
             .add("cmd=play","wait","format=junitxml")
-            .add("name="+composition)
+            .add("name="+ composition)
             .add("url=" + s.getUrl())
             .add("username="+s.getUsername())
             .addMasked("password=" + s.getPassword());
