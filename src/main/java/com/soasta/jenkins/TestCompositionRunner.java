@@ -78,6 +78,7 @@ public class TestCompositionRunner extends Builder {
             .addMasked("password=" + s.getPassword());
 
         FilePath xml = new FilePath(build.getWorkspace(),composition+".xml");
+        xml.getParent().mkdirs(); // make sure the directory exists
         int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(xml.write()).stderr(listener.getLogger()).join();
         if (r!=0)   return false;
 
