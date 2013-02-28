@@ -83,7 +83,7 @@ public class MakeAppTouchTestable extends Builder {
             .add("-password").addMasked(s.getPassword().getPlainText());
 
         if (target!=null && !target.trim().isEmpty())
-            args.add("-target", envs.expand(target))
+            args.add("-target", envs.expand(target));
 
         args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
 
