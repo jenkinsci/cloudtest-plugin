@@ -78,10 +78,13 @@ public class MakeAppTouchTestable extends Builder {
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
             .add("-project", envs.expand(projectFile))
-            .add("-target", envs.expand(target))
             .add("-url").add(s.getUrl())
             .add("-username",s.getUsername())
             .add("-password").addMasked(s.getPassword().getPlainText());
+
+        if (target!=null && !target.trim().isEmpty())
+            args.add("-target", envs.expand(target))
+
         args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
 
         int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();

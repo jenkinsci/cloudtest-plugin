@@ -75,7 +75,7 @@ public class iOSAppInstaller extends Builder {
     public static class DescriptorImpl extends AbstractCloudTestBuilerDescriptor {
         @Override
         public String getDisplayName() {
-            return "Install IPA to the device";
+            return "Install iOS App";
         }
     }
 }

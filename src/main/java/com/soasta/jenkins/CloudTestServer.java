@@ -91,13 +91,13 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         // if the login succeeds, we'll see a redirect
         Header loc = post.getResponseHeader("Location");
         if (loc!=null && loc.getValue().endsWith("/Central"))
-            return FormValidation.ok("OK");
+            return FormValidation.ok("Success!");
 
         if (!post.getResponseBodyAsString().contains("SOASTA"))
             return FormValidation.error(getUrl()+" doesn't look like a CloudTest server");
 
         // if it fails, the server responds with 200!
-        return FormValidation.error("Username/password was incorrect");
+        return FormValidation.error("Invalid credentials.");
     }
 
     /**
