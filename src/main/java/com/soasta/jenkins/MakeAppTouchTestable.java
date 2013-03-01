@@ -29,14 +29,16 @@ public class MakeAppTouchTestable extends Builder {
     private final String url;
     private final String projectFile,target;
     private final String launchURL;
+    private final boolean backupModifiedFiles;
     private final String additionalOptions;
 
     @DataBoundConstructor
-    public MakeAppTouchTestable(String url, String projectFile, String target, String launchURL, String additionalOptions) {
+    public MakeAppTouchTestable(String url, String projectFile, String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
         this.url = url;
         this.projectFile = projectFile;
         this.target = target;
         this.launchURL = launchURL;
+        this.backupModifiedFiles = backupModifiedFiles;
         this.additionalOptions = additionalOptions;
     }
 
@@ -54,6 +56,10 @@ public class MakeAppTouchTestable extends Builder {
 
     public String getLaunchURL() {
         return launchURL;
+    }
+
+    public boolean getBackupModifiedFiles() {
+        return backupModifiedFiles;
     }
 
     public String getAdditionalOptions() {
@@ -92,6 +98,8 @@ public class MakeAppTouchTestable extends Builder {
             args.add("-target", envs.expand(target));
         if (launchURL!=null && !launchURL.trim().isEmpty())
             args.add("-launchURL", envs.expand(launchURL));
+        if (!backupModifiedFiles)
+            args.add("-nobackup");
 
         args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
 

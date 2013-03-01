@@ -21,6 +21,9 @@ f.advanced {
     f.entry(title:"Launch URL (optional)",field:"launchURL") {
         f.textbox()
     }
+    f.entry(title:"Back up modified files",field:"backupModifiedFiles") {
+        f.checkbox()
+    }
     f.entry(title:"Additional Options",field:"additionalOptions") {
         f.expandableTextbox()
     }
