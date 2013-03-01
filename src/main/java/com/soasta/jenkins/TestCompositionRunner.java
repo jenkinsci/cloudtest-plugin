@@ -98,7 +98,7 @@ public class TestCompositionRunner extends Builder {
     public static class DescriptorImpl extends AbstractCloudTestBuilerDescriptor {
         @Override
         public String getDisplayName() {
-            return "Run CloudTest Composition";
+            return "Play Composition";
         }
 
         public AutoCompletionCandidates doAutoCompleteComposition(@QueryParameter String url) throws IOException, InterruptedException {
