@@ -18,6 +18,9 @@ f.entry(title:"Target",field:"target") {
     f.textbox()
 }
 f.advanced {
+    f.entry(title:"Launch URL (optional)",field:"launchURL") {
+        f.textbox()
+    }
     f.entry(title:"Additional Options",field:"additionalOptions") {
         f.expandableTextbox()
     }

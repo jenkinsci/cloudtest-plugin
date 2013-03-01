@@ -28,13 +28,15 @@ public class MakeAppTouchTestable extends Builder {
      */
     private final String url;
     private final String projectFile,target;
+    private final String launchURL;
     private final String additionalOptions;
 
     @DataBoundConstructor
-    public MakeAppTouchTestable(String url, String projectFile, String target, String additionalOptions) {
+    public MakeAppTouchTestable(String url, String projectFile, String target, String launchURL, String additionalOptions) {
         this.url = url;
         this.projectFile = projectFile;
         this.target = target;
+        this.launchURL = launchURL;
         this.additionalOptions = additionalOptions;
     }
 
@@ -48,6 +50,10 @@ public class MakeAppTouchTestable extends Builder {
 
     public String getTarget() {
         return target;
+    }
+
+    public String getLaunchURL() {
+        return launchURL;
     }
 
     public String getAdditionalOptions() {
@@ -84,6 +90,8 @@ public class MakeAppTouchTestable extends Builder {
 
         if (target!=null && !target.trim().isEmpty())
             args.add("-target", envs.expand(target));
+        if (launchURL!=null && !launchURL.trim().isEmpty())
+            args.add("-launchURL", envs.expand(launchURL));
 
         args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
 
