@@ -11,10 +11,10 @@ if (descriptor.showUrlField()) {
         f.select()
     }
 }
-f.entry(title:"XCode Project File",field:"projectFile") {
+f.entry(title:"Project Directory",field:"projectFile") {
     f.textbox()
 }
-f.entry(title:"Target",field:"target") {
+f.entry(title:"Target (iOS only)",field:"target") {
     f.textbox()
 }
 f.advanced {
