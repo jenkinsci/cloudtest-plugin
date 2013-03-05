@@ -13,8 +13,11 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
+import hudson.util.FormValidation;
 import hudson.util.QuotedStringTokenizer;
+
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 
@@ -76,6 +79,20 @@ public class iOSAppInstaller extends Builder {
         @Override
         public String getDisplayName() {
             return "Install iOS App";
+        }
+
+        /**
+         * Called automatically by Jenkins whenever the "ipa"
+         * field is modified by the user.
+         * @param value the new IPA.
+         */
+        public FormValidation doCheckIpa(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("IPA file is required.");
+            } else {
+                // TODO: Check if the actual file is present.
+                return FormValidation.ok();
+            }
         }
     }
 }

@@ -14,8 +14,11 @@ import hudson.model.BuildListener;
 import hudson.model.JDK;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
+import hudson.util.FormValidation;
 import hudson.util.QuotedStringTokenizer;
+
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 
@@ -112,6 +115,20 @@ public class MakeAppTouchTestable extends Builder {
         @Override
         public String getDisplayName() {
             return "Make App TouchTestable";
+        }
+
+        /**
+         * Called automatically by Jenkins whenever the "projectFile"
+         * field is modified by the user.
+         * @param value the new IPA.
+         */
+        public FormValidation doCheckProjectFile(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("Project directory is required.");
+            } else {
+                // TODO: Check if the actual directory is present.
+                return FormValidation.ok();
+            }
         }
     }
 }

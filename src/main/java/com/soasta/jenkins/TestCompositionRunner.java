@@ -21,8 +21,12 @@ import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.DescribableList;
+import hudson.util.FormValidation;
+
 import jenkins.model.Jenkins;
+
 import org.apache.commons.io.output.ByteArrayOutputStream;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -99,6 +103,20 @@ public class TestCompositionRunner extends Builder {
         @Override
         public String getDisplayName() {
             return "Play Composition";
+        }
+
+
+        /**
+         * Called automatically by Jenkins whenever the "composition"
+         * field is modified by the user.
+         * @param value the new IPA.
+         */
+        public FormValidation doCheckComposition(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("Composition name is required.");
+            } else {
+                return FormValidation.ok();
+            }
         }
 
         public AutoCompletionCandidates doAutoCompleteComposition(@QueryParameter String url) throws IOException, InterruptedException {
