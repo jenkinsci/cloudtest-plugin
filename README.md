@@ -6,6 +6,9 @@ The CloudTest Jenkins plugin provides the ability to:
 * silently install an iOS app on a connected device
 * play CloudTest compositions and include the output in the build's test results
 
+### Pre-requisites
+The CloudTest plug-in requires Jenkins 1.447 or later.
+
 ### Global Configuration Options
 
 Before using the plug-in, you will need to provide the CloudTest server information, in the "Manage Jenkins" -&gt; "Configure System" page.
