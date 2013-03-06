@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012, CloudBees, Inc.
+ * Copyright (c) 2012-2013, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -111,7 +112,7 @@ public class MakeAppTouchTestable extends Builder {
     }
 
     @Extension
-    public static class DescriptorImpl extends AbstractCloudTestBuilerDescriptor {
+    public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
             return "Make App TouchTestable";

@@ -64,7 +64,7 @@ public class RebootIOSDevice extends Builder {
     }
 
     @Extension
-    public static class DescriptorImpl extends AbstractCloudTestBuilerDescriptor {
+    public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
             return "Reboot iOS Device";

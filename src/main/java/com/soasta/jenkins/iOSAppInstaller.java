@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012, CloudBees, Inc.
+ * Copyright (c) 2012-2013, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -75,7 +76,7 @@ public class iOSAppInstaller extends Builder {
     }
 
     @Extension
-    public static class DescriptorImpl extends AbstractCloudTestBuilerDescriptor {
+    public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
             return "Install iOS App on Device";

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012, CloudBees, Inc.
+ * Copyright (c) 2012-2013, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -14,7 +15,7 @@ import javax.inject.Inject;
 /**
  * @author Kohsuke Kawaguchi
  */
-public abstract class AbstractCloudTestBuilerDescriptor extends BuildStepDescriptor<Builder> {
+public abstract class AbstractCloudTestBuilderDescriptor extends BuildStepDescriptor<Builder> {
     @Inject
     CloudTestServer.DescriptorImpl serverDescriptor;
 
