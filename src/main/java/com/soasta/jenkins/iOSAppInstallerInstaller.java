@@ -56,8 +56,8 @@ public class iOSAppInstallerInstaller extends DownloadFromUrlInstaller {
         return performInstallation(node,log).child("bin/ios_app_installer");
     }
 
-    public FilePath ios_sim_installer(Node node, TaskListener log) throws IOException, InterruptedException {
-        return performInstallation(node,log).child("bin/ios_sim_installer");
+    public FilePath ios_sim_launcher(Node node, TaskListener log) throws IOException, InterruptedException {
+        return performInstallation(node,log).child("bin/ios_sim_launcher");
     }
 
 
