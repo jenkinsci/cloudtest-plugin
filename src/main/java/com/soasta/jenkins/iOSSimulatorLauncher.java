@@ -13,9 +13,12 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.QuotedStringTokenizer;
+
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 
@@ -99,6 +102,20 @@ public class iOSSimulatorLauncher extends Builder {
             items.add("iPad", "ipad");
             items.add("iPad (Retina)", "ipad_retina");
             return items;
+        }
+
+        /**
+         * Called automatically by Jenkins whenever the "app"
+         * field is modified by the user.
+         * @param value the new app directory.
+         */
+        public FormValidation doCheckApp(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("App directory is required.");
+            } else {
+                // TODO: Check if the actual directory is present.
+                return FormValidation.ok();
+            }
         }
     }
 }
