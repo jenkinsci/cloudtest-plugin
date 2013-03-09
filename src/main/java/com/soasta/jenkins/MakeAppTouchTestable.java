@@ -11,6 +11,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.JDK;
 import hudson.tasks.Builder;
@@ -18,6 +19,7 @@ import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.QuotedStringTokenizer;
 
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -123,12 +125,12 @@ public class MakeAppTouchTestable extends Builder {
          * field is modified by the user.
          * @param value the new IPA.
          */
-        public FormValidation doCheckProjectFile(@QueryParameter String value) {
+        public FormValidation doCheckProjectFile(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
                 return FormValidation.error("Project directory is required.");
             } else {
-                // TODO: Check if the actual directory is present.
-                return FormValidation.ok();
+                // Make sure the directory exists.
+                return FilePath.validateFileMask(project.getSomeWorkspace(), value);
             }
         }
     }

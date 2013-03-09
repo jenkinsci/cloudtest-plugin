@@ -10,6 +10,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
@@ -17,6 +18,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.QuotedStringTokenizer;
 
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -102,12 +104,12 @@ public class iOSSimulatorLauncher extends Builder {
          * field is modified by the user.
          * @param value the new app directory.
          */
-        public FormValidation doCheckApp(@QueryParameter String value) {
+        public FormValidation doCheckApp(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
                 return FormValidation.error("App directory is required.");
             } else {
-                // TODO: Check if the actual directory is present.
-                return FormValidation.ok();
+                // Make sure the directory exists.
+                return FilePath.validateFileMask(project.getSomeWorkspace(), value);
             }
         }
     }

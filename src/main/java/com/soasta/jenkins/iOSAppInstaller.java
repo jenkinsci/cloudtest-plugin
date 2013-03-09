@@ -11,12 +11,14 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.QuotedStringTokenizer;
 
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -87,12 +89,12 @@ public class iOSAppInstaller extends Builder {
          * field is modified by the user.
          * @param value the new IPA.
          */
-        public FormValidation doCheckIpa(@QueryParameter String value) {
+        public FormValidation doCheckIpa(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
                 return FormValidation.error("IPA file is required.");
             } else {
-                // TODO: Check if the actual file is present.
-                return FormValidation.ok();
+                // Make sure the file exists.
+                return FilePath.validateFileMask(project.getSomeWorkspace(), value);
             }
         }
     }
