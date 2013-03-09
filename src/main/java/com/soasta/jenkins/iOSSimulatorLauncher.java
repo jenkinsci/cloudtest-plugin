@@ -89,7 +89,7 @@ public class iOSSimulatorLauncher extends Builder {
     }
 
     @Extension
-    public static class DescriptorImpl extends AbstractCloudTestBuilerDescriptor {
+    public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
             return "Run App in iOS Simulator";
