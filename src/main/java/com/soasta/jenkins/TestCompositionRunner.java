@@ -32,6 +32,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Collections;
@@ -71,31 +72,71 @@ public class TestCompositionRunner extends Builder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         CloudTestServer s = getServer();
-        if (s==null)
+        if (s == null)
             throw new AbortException("No TouchTest server is configured in the system configuration.");
 
         FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
         EnvVars envs = build.getEnvironment(listener);
-        String composition = envs.expand(this.composition);
+        
+        // Create a unique sub-directory to store all test results.
+        String resultsDir = "." + getClass().getName();
+        
+        // Split by newline.
+        String[] compositions = envs.expand(this.composition).split("[\r\n]+");
 
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(scommand)
-            .add("cmd=play","wait","format=junitxml")
-            .add("name="+ composition)
-            .add("url=" + s.getUrl())
-            .add("username="+s.getUsername())
-            .addMasked("password=" + s.getPassword());
-
-        String fileName = composition + ".xml";
-        if (fileName.startsWith("/"))   fileName=fileName.substring(1);
-        FilePath xml = new FilePath(build.getWorkspace(), fileName);
-        xml.getParent().mkdirs(); // make sure the directory exists
-        int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(xml.write()).stderr(listener.getLogger()).join();
-        if (xml.length()==0)    return false;   // some catastrophic failure
-
-        // archive this result
-        JUnitResultArchiver archiver = new JUnitResultArchiver(fileName,true,
-                new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP, Collections.singleton(new JunitResultPublisher(null))));
+        for (String composition : compositions)
+        {
+            ArgumentListBuilder args = new ArgumentListBuilder();
+            args.add(scommand)
+                .add("cmd=play","wait","format=junitxml")
+                .add("name="+ composition)
+                .add("url=" + s.getUrl())
+                .add("username="+s.getUsername())
+                .addMasked("password=" + s.getPassword());
+  
+            String fileName = composition + ".xml";
+  
+            // Strip off any leading slash characters (composition names
+            // will typically be the full CloudTest folder path).
+            if (fileName.startsWith("/"))
+            {
+                fileName = fileName.substring(1);
+            }
+            
+            // Put the file in the test results directory.
+            fileName = resultsDir + File.separator + fileName;
+            
+            FilePath xml = new FilePath(build.getWorkspace(), fileName);
+            
+            // Make sure the directory exists.
+            xml.getParent().mkdirs();
+            
+            // Run it!
+            int exitCode = launcher
+                .launch()
+                .cmds(args)
+                .pwd(build.getWorkspace())
+                .stdout(xml.write())
+                .stderr(listener.getLogger())
+                .join();
+            
+            if (xml.length() == 0)
+            {
+                // SCommand did not produce any output.
+                // This should never happen, but just in case...
+                return false;
+            }
+        }
+        
+        // Now that we've finished running all the compositions, pass
+        // the results directory off to the JUnit archiver.
+        String resultsPattern = resultsDir + "/**/*.xml";
+        JUnitResultArchiver archiver = new JUnitResultArchiver(
+            resultsPattern,
+            true,
+            new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(
+                Saveable.NOOP,
+                Collections.singleton(new JunitResultPublisher(null))));
         return archiver.perform(build,launcher,listener);
     }
 
@@ -125,7 +166,7 @@ public class TestCompositionRunner extends Builder {
 
             ArgumentListBuilder args = new ArgumentListBuilder();
             args.add(install(s))
-                .add("list","type=composition")
+                .add("list", "type=composition")
                 .add("url=" + s.getUrl())
                 .add("username=" + s.getUsername())
                 .addMasked("password=" + s.getPassword());

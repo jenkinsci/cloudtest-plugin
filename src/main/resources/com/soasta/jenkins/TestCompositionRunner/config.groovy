@@ -7,6 +7,6 @@ if (descriptor.showUrlField()) {
         f.select()
     }
 }
-f.entry(title:"Composition",field:"composition") {
-    f.textbox()
+f.entry(title:"Composition(s)",field:"composition") {
+    f.expandableTextbox()
 }
