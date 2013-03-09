@@ -21,7 +21,4 @@ f.advanced {
     f.entry(title:"Device family",field:"family") {
         f.select(name:"family")
     }
-    f.entry(title:"TouchTest Agent URL",field:"agentURL") {
-        f.textbox()
-    }
 }

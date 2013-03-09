@@ -27,15 +27,14 @@ public class iOSSimulatorLauncher extends Builder {
      * URL of {@link CloudTestServer}.
      */
     private final String url;
-    private final String app, sdk, family, agentURL;
+    private final String app, sdk, family;
 
     @DataBoundConstructor
-    public iOSSimulatorLauncher(String url, String app, String sdk, String family, String agentURL) {
+    public iOSSimulatorLauncher(String url, String app, String sdk, String family) {
         this.url = url;
         this.app = app;
         this.sdk = sdk;
         this.family = family;
-        this.agentURL = agentURL;
     }
 
     public String getUrl() {
@@ -52,10 +51,6 @@ public class iOSSimulatorLauncher extends Builder {
 
     public String getFamily() {
         return family;
-    }
-
-    public String getAgentURL() {
-        return agentURL;
     }
 
     public CloudTestServer getServer() {
@@ -81,8 +76,6 @@ public class iOSSimulatorLauncher extends Builder {
             args.add("--sdk", envs.expand(sdk));
         if (family != null && !family.trim().isEmpty())
             args.add("--family", envs.expand(family));
-        if (agentURL != null && !agentURL.trim().isEmpty())
-            args.add("--agenturl", envs.expand(agentURL));
 
         int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
         return r==0;
