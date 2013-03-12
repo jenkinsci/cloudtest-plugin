@@ -5,6 +5,7 @@
 package com.soasta.jenkins;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -16,6 +17,7 @@ import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.QuotedStringTokenizer;
 
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -43,13 +45,19 @@ public class ImportFiles extends Builder {
      * How to handle duplicates (if any).
      */
     private final String mode;
+    
+    /**
+     * Additional parameters to pass to SCommand (if any).
+     */
+    private final String additionalOptions;
 
     @DataBoundConstructor
-    public ImportFiles(String url, String files, String excludes, String mode) {
+    public ImportFiles(String url, String files, String excludes, String mode, String additionalOptions) {
         this.url = url;
         this.files = files.trim();
         this.excludes = Util.fixEmptyAndTrim(excludes);
         this.mode = mode;
+        this.additionalOptions = additionalOptions;
     }
 
     public CloudTestServer getServer() {
@@ -70,6 +78,10 @@ public class ImportFiles extends Builder {
     
     public String getMode() {
         return mode;
+    }
+    
+    public String getAdditionalOptions() {
+        return additionalOptions;
     }
 
     @Override
@@ -105,6 +117,9 @@ public class ImportFiles extends Builder {
             args.add("file=" + filePath.getRemote());
         }
 
+        EnvVars envs = build.getEnvironment(listener);
+        args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
+        
         // Run it!
         int exitCode = launcher
             .launch()

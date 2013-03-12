@@ -17,4 +17,7 @@ f.advanced {
     f.entry(title:"Conflict resolution mode",field:"mode") {
         f.select(name:"mode")
     }
+    f.entry(title:"Additional Options",field:"additionalOptions") {
+        f.expandableTextbox()
+    }
 }
