@@ -5,18 +5,12 @@
  */
 package com.soasta.jenkins;
 
-import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
-import hudson.util.QuotedStringTokenizer;
 
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -27,54 +21,22 @@ import java.io.IOException;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class iOSAppInstaller extends Builder {
-    /**
-     * URL of {@link CloudTestServer}.
-     */
-    private final String url;
-    private final String ipa, additionalOptions;
+public class iOSAppInstaller extends iOSAppInstallerBase {
+    private final String ipa;
 
     @DataBoundConstructor
     public iOSAppInstaller(String url, String ipa, String additionalOptions) {
-        this.url = url;
+        super(url, additionalOptions);
         this.ipa = ipa;
-        this.additionalOptions = additionalOptions;
-    }
-
-    public String getUrl() {
-        return url;
     }
 
     public String getIpa() {
         return ipa;
     }
-
-    public String getAdditionalOptions() {
-        return additionalOptions;
-    }
-
-    public CloudTestServer getServer() {
-        return CloudTestServer.get(url);
-    }
-
+    
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        ArgumentListBuilder args = new ArgumentListBuilder();
-
-        EnvVars envs = build.getEnvironment(listener);
-
-        CloudTestServer s = getServer();
-        if (s==null)
-            throw new AbortException("No TouchTest server is configured in the system configuration.");
-
-        FilePath bin = new iOSAppInstallerInstaller(s).ios_app_installer(build.getBuiltOn(), listener);
-
-        args.add(bin)
-            .add("--ipa", envs.expand(ipa));
-        args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
-
-        int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
-        return r==0;
+    protected void addArgs(EnvVars envs, ArgumentListBuilder args) {
+        args.add("--ipa", envs.expand(ipa));
     }
 
     @Extension

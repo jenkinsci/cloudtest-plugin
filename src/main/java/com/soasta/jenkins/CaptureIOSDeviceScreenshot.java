@@ -9,22 +9,22 @@ import hudson.Extension;
 import hudson.util.ArgumentListBuilder;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-public class RebootIOSDevice extends iOSAppInstallerBase {
+public class CaptureIOSDeviceScreenshot extends iOSAppInstallerBase {
     @DataBoundConstructor
-    public RebootIOSDevice(String url, String additionalOptions) {
+    public CaptureIOSDeviceScreenshot(String url, String additionalOptions) {
         super(url, additionalOptions);
     }
-    
+
     @Override
     protected void addArgs(EnvVars envs, ArgumentListBuilder args) {
-        args.add("--reboot");
+        args.add("--screenshot");
     }
 
     @Extension
     public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
-            return "Reboot iOS Device";
+            return "Capture iOS Device Screen Shot";
         }
     }
 }
