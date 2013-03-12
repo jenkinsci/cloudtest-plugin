@@ -14,4 +14,7 @@ f.advanced {
     f.entry(title:"Excludes",field:"excludes") {
         f.textbox()
     }
+    f.entry(title:"Conflict resolution mode",field:"mode") {
+        f.select(name:"mode")
+    }
 }

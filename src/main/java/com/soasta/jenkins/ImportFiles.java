@@ -15,6 +15,7 @@ import hudson.model.BuildListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -37,12 +38,18 @@ public class ImportFiles extends Builder {
      * Possibly null 'excludes' pattern as in Ant.
      */
     private final String excludes;
+    
+    /**
+     * How to handle duplicates (if any).
+     */
+    private final String mode;
 
     @DataBoundConstructor
-    public ImportFiles(String url, String files, String excludes) {
+    public ImportFiles(String url, String files, String excludes, String mode) {
         this.url = url;
         this.files = files.trim();
         this.excludes = Util.fixEmptyAndTrim(excludes);
+        this.mode = mode;
     }
 
     public CloudTestServer getServer() {
@@ -60,6 +67,10 @@ public class ImportFiles extends Builder {
     public String getExcludes() {
         return excludes;
     }
+    
+    public String getMode() {
+        return mode;
+    }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -75,6 +86,9 @@ public class ImportFiles extends Builder {
             .add("url=" + s.getUrl())
             .add("username=" + s.getUsername())
             .addMasked("password=" + s.getPassword());
+        
+        if (mode != null)
+            args.add("mode=" + mode);
         
         FilePath[] filePaths = build.getWorkspace().list(files, excludes);
         
@@ -116,6 +130,15 @@ public class ImportFiles extends Builder {
          */
         public FormValidation doCheckFiles(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+        }
+
+        public ListBoxModel doFillModeItems() {
+            ListBoxModel items = new ListBoxModel();
+            items.add("Replace the existing object(s)", "overwrite");
+            items.add("Fail the import", "error");
+            items.add("Ignore", "skip");
+            items.add("Generate a non-conflicting name", "rename");
+            return items;
         }
     }
 }
