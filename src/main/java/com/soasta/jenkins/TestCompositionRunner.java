@@ -5,7 +5,6 @@
  */
 package com.soasta.jenkins;
 
-import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -17,7 +16,6 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
-import hudson.tasks.Builder;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.ArgumentListBuilder;
@@ -40,12 +38,7 @@ import java.util.Collections;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class TestCompositionRunner extends Builder {
-    /**
-     * URL of {@link CloudTestServer}.
-     */
-    private final String url;
-
+public class TestCompositionRunner extends AbstractSCommandBuilder {
     /**
      * Composition to execute.
      */
@@ -53,16 +46,8 @@ public class TestCompositionRunner extends Builder {
 
     @DataBoundConstructor
     public TestCompositionRunner(String url, String composition) {
-        this.url = url;
+        super(url);
         this.composition = composition;
-    }
-
-    public CloudTestServer getServer() {
-        return CloudTestServer.get(url);
-    }
-
-    public String getUrl() {
-        return url;
     }
 
     public String getComposition() {
@@ -71,35 +56,24 @@ public class TestCompositionRunner extends Builder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        CloudTestServer s = getServer();
-        if (s == null)
-            throw new AbortException("No TouchTest server is configured in the system configuration.");
-
-        FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
-        EnvVars envs = build.getEnvironment(listener);
-        
         // Create a unique sub-directory to store all test results.
         String resultsDir = "." + getClass().getName();
         
         // Split by newline.
+        EnvVars envs = build.getEnvironment(listener);
         String[] compositions = envs.expand(this.composition).split("[\r\n]+");
 
-        for (String composition : compositions)
-        {
-            ArgumentListBuilder args = new ArgumentListBuilder();
-            args.add(scommand)
-                .add("cmd=play","wait","format=junitxml")
-                .add("name="+ composition)
-                .add("url=" + s.getUrl())
-                .add("username="+s.getUsername())
-                .addMasked("password=" + s.getPassword());
+        for (String composition : compositions) {
+            ArgumentListBuilder args = getSCommandArgs(build, listener);
+
+            args.add("cmd=play", "wait", "format=junitxml")
+                .add("name=" + composition);
   
             String fileName = composition + ".xml";
   
             // Strip off any leading slash characters (composition names
             // will typically be the full CloudTest folder path).
-            if (fileName.startsWith("/"))
-            {
+            if (fileName.startsWith("/")) {
                 fileName = fileName.substring(1);
             }
             
@@ -110,7 +84,7 @@ public class TestCompositionRunner extends Builder {
             
             // Make sure the directory exists.
             xml.getParent().mkdirs();
-            
+
             // Run it!
             int exitCode = launcher
                 .launch()
@@ -119,9 +93,8 @@ public class TestCompositionRunner extends Builder {
                 .stdout(xml.write())
                 .stderr(listener.getLogger())
                 .join();
-            
-            if (xml.length() == 0)
-            {
+
+            if (xml.length() == 0) {
                 // SCommand did not produce any output.
                 // This should never happen, but just in case...
                 return false;
@@ -147,11 +120,10 @@ public class TestCompositionRunner extends Builder {
             return "Play Composition";
         }
 
-
         /**
          * Called automatically by Jenkins whenever the "composition"
          * field is modified by the user.
-         * @param value the new IPA.
+         * @param value the new composition name.
          */
         public FormValidation doCheckComposition(@QueryParameter String value) {
             if (value == null || value.trim().isEmpty()) {

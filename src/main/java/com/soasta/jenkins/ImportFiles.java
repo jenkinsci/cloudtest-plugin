@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2012-2013, SOASTA, Inc.
+ * Copyright (c) 2013, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
 
-import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -13,7 +12,6 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -25,12 +23,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
 
-public class ImportFiles extends Builder {
-    /**
-     * URL of {@link CloudTestServer}.
-     */
-    private final String url;
-
+public class ImportFiles extends AbstractSCommandBuilder {
     /**
      * Comma- or space-separated list of patterns of files to be imported.
      */
@@ -53,19 +46,11 @@ public class ImportFiles extends Builder {
 
     @DataBoundConstructor
     public ImportFiles(String url, String files, String excludes, String mode, String additionalOptions) {
-        this.url = url;
+        super(url);
         this.files = files.trim();
         this.excludes = Util.fixEmptyAndTrim(excludes);
         this.mode = mode;
         this.additionalOptions = additionalOptions;
-    }
-
-    public CloudTestServer getServer() {
-        return CloudTestServer.get(url);
-    }
-
-    public String getUrl() {
-        return url;
     }
 
     public String getFiles() {
@@ -86,18 +71,9 @@ public class ImportFiles extends Builder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        CloudTestServer s = getServer();
-        if (s == null)
-            throw new AbortException("No TouchTest server is configured in the system configuration.");
+        ArgumentListBuilder args = getSCommandArgs(build, listener);
 
-        FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
-
-        ArgumentListBuilder args = new ArgumentListBuilder();
-        args.add(scommand)
-            .add("cmd=import")
-            .add("url=" + s.getUrl())
-            .add("username=" + s.getUsername())
-            .addMasked("password=" + s.getPassword());
+        args.add("cmd=import");
         
         if (mode != null)
             args.add("mode=" + mode);
