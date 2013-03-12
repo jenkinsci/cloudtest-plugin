@@ -102,7 +102,9 @@ public class ImportFiles extends Builder {
         if (mode != null)
             args.add("mode=" + mode);
         
-        FilePath[] filePaths = build.getWorkspace().list(files, excludes);
+        String includes = convertFileListToIncludePattern(files);
+        
+        FilePath[] filePaths = build.getWorkspace().list(includes, excludes);
         
         if (filePaths.length == 0) {
             // Didn't match anything.
@@ -144,7 +146,8 @@ public class ImportFiles extends Builder {
          * @param value the new file pattern.
          */
         public FormValidation doCheckFiles(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
-            return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+            String includes = convertFileListToIncludePattern(value);
+            return FilePath.validateFileMask(project.getSomeWorkspace(), includes);
         }
 
         public ListBoxModel doFillModeItems() {
@@ -155,5 +158,14 @@ public class ImportFiles extends Builder {
             items.add("Generate a non-conflicting name", "rename");
             return items;
         }
+    }
+    
+    private static String convertFileListToIncludePattern(String files) {
+        // Convert newlines to commas.  If the user has
+        // expanded the textbox to make it a multi-line
+        // input, they should not have to enter a comma
+        // after each file name, but the FilePath.list()
+        // method requires commas.
+        return files.replaceAll("[\r\n]+", ",");
     }
 }
