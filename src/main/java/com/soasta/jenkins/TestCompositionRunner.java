@@ -44,14 +44,28 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
      */
     private final String composition;
 
+    private final boolean deleteOldResults;
+
+    private final int maxDaysOfResults;
+
     @DataBoundConstructor
-    public TestCompositionRunner(String url, String composition) {
+    public TestCompositionRunner(String url, String composition, DeleteOldResultsSettings deleteOldResults) {
         super(url);
         this.composition = composition;
+        this.deleteOldResults = (deleteOldResults != null);
+        this.maxDaysOfResults = (deleteOldResults == null ? 0 : deleteOldResults.maxDaysOfResults);
     }
 
     public String getComposition() {
         return composition;
+    }
+
+    public boolean getDeleteOldResults() {
+        return deleteOldResults;
+    }
+
+    public int getMaxDaysOfResults() {
+        return maxDaysOfResults;
     }
 
     @Override
@@ -133,6 +147,29 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             }
         }
 
+        /**
+         * Called automatically by Jenkins whenever the "maxDaysOfResults"
+         * field is modified by the user.
+         * @param value the new maximum age, in days.
+         */
+        public FormValidation doCheckMaxDaysOfResults(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("Days to keep results is required.");
+            } else {
+                try {
+                    int maxDays = Integer.parseInt(value);
+
+                    if (maxDays <= 0) {
+                        return FormValidation.error("Value must be > 0.");
+                    } else {
+                        return FormValidation.ok();
+                    }
+                } catch (NumberFormatException e) {
+                    return FormValidation.error("Value must be numeric.");
+                }
+            }
+        }
+
         public AutoCompletionCandidates doAutoCompleteComposition(@QueryParameter String url) throws IOException, InterruptedException {
             CloudTestServer s = CloudTestServer.get(url);
 
@@ -161,6 +198,19 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         private synchronized FilePath install(CloudTestServer s) throws IOException, InterruptedException {
             SCommandInstaller sCommandInstaller = new SCommandInstaller(s);
             return sCommandInstaller.scommand(Jenkins.getInstance(), TaskListener.NULL);
+        }
+    }
+
+    public static class DeleteOldResultsSettings {
+        private final int maxDaysOfResults;
+
+        @DataBoundConstructor
+        public DeleteOldResultsSettings(int maxDaysOfResults) {
+            this.maxDaysOfResults = maxDaysOfResults;
+        }
+
+        public int getMaxDaysOfResults() {
+            return maxDaysOfResults;
         }
     }
 }
