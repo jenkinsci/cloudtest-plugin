@@ -1,15 +1,7 @@
-// **************************************************
-//
-// Copyright 2006-2011 SOASTA, Inc.
-// All rights reserved.
-// Proprietary and confidential.
-//
-// File: JunitResultAction.java
-//
-// This file is to extend to TestAction
-//
-// **************************************************
-
+/*
+ * Copyright (c) 2011-2013, SOASTA, Inc.
+ * All Rights Reserved.
+ */
 package com.soasta.jenkins;
 
 import java.util.List;

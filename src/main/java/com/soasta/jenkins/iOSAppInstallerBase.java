@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, SOASTA, Inc.
+ * Copyright (c) 2013, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;

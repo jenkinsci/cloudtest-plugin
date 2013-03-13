@@ -1,14 +1,7 @@
-//**************************************************
-//
-//	Copyright 2012 SOASTA, Inc.
-//	All rights reserved.
-//	Proprietary and confidential.
-//
-//	File:  JunitResultPublisher.java
-//  Contains the JunitResultPublisher class.
-//
-//**************************************************
-
+/*
+ * Copyright (c) 2011-2013, SOASTA, Inc.
+ * All Rights Reserved.
+ */
 package com.soasta.jenkins;
 
 import hudson.Launcher;
