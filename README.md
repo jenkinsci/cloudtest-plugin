@@ -24,7 +24,7 @@ The plug-in adds the following new build steps:
 Adds the TouchTest Driver library to your app's source code.  Typically this build step is inserted right before the build step that compiles the app's code (e.g. before the Xcode build step for iOS, or before the "Invoke Ant" build step for Android).
 
 ##### Install iOS App on Device
-Silently installs an IPA file on one or more attached iOS devices.  This ensures that your tests run against the latest version of your app.  _NOTE: there is no Android version of this build step, because the Android SDK already provides this functionality._
+Silently installs an IPA file on one or more attached iOS devices.  This ensures that your tests run against the latest version of your app.  _NOTE: there is no Android version of this build step, because the Android SDK already provides this functionality ("adb install")._
 
 ##### Play Composition
 Executes a CloudTest composition, and saves the output in the build's test results.  You can include this build step multiple times if there are multiple compositions in your test suite.
@@ -33,4 +33,4 @@ Executes a CloudTest composition, and saves the output in the build's test resul
 Wakes up one or more attached iOS devices, and opens Mobile Safari to the most recently-viewed page (e.g. TouchTest Agent).  This can optionally be used at the beginning of a build, to "prep" the devices for testing.  _NOTE: there is no Android version of this build step, because the Android SDK already provides this functionality._
 
 ##### Reboot iOS Device
-Reboots one or more attached iOS devices.  This can optionally be used at the end of a build, to "reset" for the next one.  _NOTE: there is no Android version of this build step, because the Android SDK already provides this functionality._
+Reboots one or more attached iOS devices.  This can optionally be used at the end of a build, to "reset" for the next one.  _NOTE: there is no Android version of this build step, because the Android SDK already provides this functionality ("adb reboot")._
