@@ -11,7 +11,7 @@
   <version>1.0</version>
   <packaging>hpi</packaging>
   <name>SOASTA CloudTest Plugin</name>
-  <url>http://cloudlink.soasta.com/t5/Knowledge-Base/How-do-I-incorporate-SOASTA-CloudTest-into-an-automated-build/ba-p/490</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/SOASTA+CloudTest+Plugin+for+Jenkins</url>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
