@@ -2,5 +2,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-   Integrates SOASTA CloudTest dashboards into test results.
+   Integrates <a href="http://www.soasta.com/products/cloudtest/">SOASTA CloudTest</a> and <a href="http://www.soasta.com/products/touchtest/">SOASTA TouchTest</a> features into Jenkins.
 </div>
