@@ -112,6 +112,23 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
                 // This should never happen, but just in case...
                 return false;
             }
+
+            if (deleteOldResults) {
+                // Run SCommand again to clean up the old results.
+                args = getSCommandArgs(build, listener);
+
+                args.add("cmd=delete", "type=result")
+                    .add("path=" + composition)
+                    .add("maxage=" + maxDaysOfResults);
+
+                launcher
+                    .launch()
+                    .cmds(args)
+                    .pwd(build.getWorkspace())
+                    .stdout(listener)
+                    .stderr(listener.getLogger())
+                    .join();
+            }
         }
         
         // Now that we've finished running all the compositions, pass
