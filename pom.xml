@@ -13,6 +13,23 @@
   <name>SOASTA CloudTest Plugin</name>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/SOASTA+CloudTest+Plugin+for+Jenkins</url>
 
+  <scm>
+    <connection>scm:git:ssh://github.com/jenkinsci/cloudtest-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/cloudtest-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/cloudtest-plugin</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>msolnit</id>
+      <name>Matt Solnit</name>
+    </developer>
+    <developer>
+      <id>kohsuke</id>
+      <name>Kohsuke Kawaguchi</name>
+    </developer>
+  </developers>
+
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
