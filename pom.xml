@@ -11,7 +11,7 @@
   <version>2.0</version>
   <packaging>hpi</packaging>
   <name>SOASTA CloudTest Plugin</name>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/SOASTA+CloudTest+Plugin+for+Jenkins</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/SOASTA+CloudTest+Plugin</url>
 
   <scm>
     <connection>scm:git:ssh://github.com/jenkinsci/cloudtest-plugin.git</connection>
