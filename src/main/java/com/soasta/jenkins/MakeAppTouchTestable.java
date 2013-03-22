@@ -122,7 +122,7 @@ public class MakeAppTouchTestable extends Builder {
         /**
          * Called automatically by Jenkins whenever the "projectFile"
          * field is modified by the user.
-         * @param value the new IPA.
+         * @param value the new path.
          */
         public FormValidation doCheckProjectFile(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
