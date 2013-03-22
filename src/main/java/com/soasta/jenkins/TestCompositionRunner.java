@@ -147,7 +147,7 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
-            return "Play Composition";
+            return "Play Composition(s)";
         }
 
         /**
