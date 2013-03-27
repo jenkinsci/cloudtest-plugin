@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, CloudBees, Inc.
+ * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -30,7 +30,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
@@ -103,7 +102,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     /**
      * Retrieves the build number of this CloudTest server.
      */
-    public VersionNumber getBuildNumber() {
+    public VersionNumber getBuildNumber() throws IOException {
         final String[] v = new String[1];
         try {
             SAXParser sp = SAXParserFactory.newInstance().newSAXParser();
@@ -132,8 +131,6 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             LOGGER.log(Level.WARNING, "Failed to load "+url, e);
         } catch (ParserConfigurationException e) {
             throw new Error(e);
-        } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to load "+url, e);
         }
         return null;
     }

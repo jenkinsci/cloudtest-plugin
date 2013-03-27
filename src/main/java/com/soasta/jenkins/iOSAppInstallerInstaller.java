@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, CloudBees, Inc.
+ * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -30,7 +30,7 @@ public class iOSAppInstallerInstaller extends DownloadFromUrlInstaller {
         this.buildNumber = buildNumber;
     }
 
-    public iOSAppInstallerInstaller(CloudTestServer server) {
+    public iOSAppInstallerInstaller(CloudTestServer server) throws IOException {
         this(server,server.getBuildNumber());
     }
 

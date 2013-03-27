@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, CloudBees, Inc.
+ * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -28,7 +28,7 @@ public class MakeAppTouchTestableInstaller extends DownloadFromUrlInstaller {
         this.buildNumber = buildNumber;
     }
 
-    public MakeAppTouchTestableInstaller(CloudTestServer server) {
+    public MakeAppTouchTestableInstaller(CloudTestServer server) throws IOException {
         this(server,server.getBuildNumber());
     }
 
