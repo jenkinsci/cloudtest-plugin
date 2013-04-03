@@ -23,8 +23,6 @@ public abstract class AbstractSCommandBuilder extends Builder {
      */
     private final String url;
     
-    private FilePath scommand;
-  
     public AbstractSCommandBuilder(String url) {
         this.url = url;
     }
@@ -49,8 +47,7 @@ public abstract class AbstractSCommandBuilder extends Builder {
       // with a list of compositions).
       
       // As far as I know, this null check does not need to be thread-safe.
-      if (scommand == null)
-          scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
+      FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
   
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand)
