@@ -109,7 +109,7 @@ public class iOSSimulatorLauncher extends Builder {
                 return FormValidation.error("App directory is required.");
             } else {
                 // Make sure the directory exists.
-                return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+                return validateFileMask(project, value);
             }
         }
     }

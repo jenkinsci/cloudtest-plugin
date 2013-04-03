@@ -123,7 +123,7 @@ public class ImportFiles extends AbstractSCommandBuilder {
          */
         public FormValidation doCheckFiles(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             String includes = convertFileListToIncludePattern(value);
-            return FilePath.validateFileMask(project.getSomeWorkspace(), includes);
+            return validateFileMask(project, includes);
         }
 
         public ListBoxModel doFillModeItems() {
