@@ -55,7 +55,7 @@ public class iOSAppInstaller extends iOSAppInstallerBase {
                 return FormValidation.error("IPA file is required.");
             } else {
                 // Make sure the file exists.
-                return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+                return validateFileMask(project, value);
             }
         }
     }
