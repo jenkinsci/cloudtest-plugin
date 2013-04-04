@@ -129,7 +129,7 @@ public class MakeAppTouchTestable extends Builder {
                 return FormValidation.error("Project directory is required.");
             } else {
                 // Make sure the directory exists.
-                return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+                return validateFileMask(project, value);
             }
         }
     }
