@@ -41,12 +41,6 @@ public abstract class AbstractSCommandBuilder extends Builder {
           throw new AbortException("No TouchTest server is configured in the system configuration.");
   
       // Download SCommand, if needed.
-
-      // We remember the location for next time, since this might be called
-      // more than once for a single build step (e.g. TestCompositionRunner
-      // with a list of compositions).
-      
-      // As far as I know, this null check does not need to be thread-safe.
       FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
   
       ArgumentListBuilder args = new ArgumentListBuilder();
