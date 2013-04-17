@@ -16,7 +16,6 @@ import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.util.QuotedStringTokenizer;
 
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -66,13 +65,23 @@ public class iOSSimulatorLauncher extends Builder {
         EnvVars envs = build.getEnvironment(listener);
 
         CloudTestServer s = getServer();
-        if (s==null)
+        if (s == null)
             throw new AbortException("No TouchTest server is configured in the system configuration.");
 
         FilePath bin = new iOSAppInstallerInstaller(s).ios_sim_launcher(build.getBuiltOn(), listener);
 
+        // Determine TouchTest Agent URL for this server.
+        // The simulator will automatically open this URL
+        // in Mobile Safari.
+        String agentURL;
+        if (url.endsWith("/"))
+            agentURL = url + "touchtest";
+        else
+            agentURL = url + "/touchtest";
+
         args.add(bin)
-            .add("--app", envs.expand(app));
+            .add("--app", envs.expand(app))
+            .add("--agenturl", agentURL);
 
         if (sdk != null && !sdk.trim().isEmpty())
             args.add("--sdk", envs.expand(sdk));
