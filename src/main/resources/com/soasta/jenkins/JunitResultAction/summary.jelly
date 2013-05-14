@@ -22,33 +22,60 @@
    	</script>
     
     <j:if test="${it.Exception}">
-    	<b>An error occurred inside the CloudTest plug-in: </b> <br/>
-    	${it.ExceptionMessage} <br/><br/>
+       <b>An error occurred inside the CloudTest plug-in: </b> <br/>
+       ${it.ExceptionMessage} <br/><br/>
     </j:if>
-    
+
     <j:choose>
-            <j:when test="${it.isPlayList()}">
+        <j:when test="${it.isPlayList()}">
+            <p>
+                Not supported
+            </p>
+        </j:when>
+        <j:otherwise>
+
+            <j:if test="${it.ResultID.length()>0}">
                 <p>
-                    Not supported
+
+                  <j:choose>
+                    <j:when test="${!empty(it.getErrorMessages())}">
+                      <j:forEach var="errorMessage" items="${it.getErrorMessages()}">
+                        <div style="color: red"><img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${errorMessage}</div>
+                      </j:forEach>
+                    </j:when>
+
+                    <j:when test="${!empty(it.getMessages())}">
+                      <j:forEach var="message" items="${it.getMessages()}">
+
+                        <j:choose>
+                          <j:when test="${message.getType() == 'validation-pass'}">
+                            <div style="color: green"><img src="${rootURL}/plugin/cloudtest/icon16_success.png" /> ${message.getContent()}</div>
+                          </j:when>
+
+                          <j:otherwise>
+                            <div style="color: red"><img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${message.getContent()}</div>
+                          </j:otherwise>
+                        </j:choose>
+
+                      </j:forEach>
+                    </j:when>
+
+                    <j:otherwise>
+                      No validation messages to show.
+                    </j:otherwise>
+
+                  </j:choose>
+
                 </p>
-            </j:when>
-            <j:otherwise>
-            
-            	<j:if test="${it.ResultID.length()>0}">
-          	    <p>
-            	    <j:forEach var="message" items="${it.ErrorMessages}">
-            	      <div style="color: red"><img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${message}</div>
-            	    </j:forEach>
-          	    </p>
-						<a id="aid" href="#" onClick="myshow()">Click here to see the SOASTA CloudTest dashboard for this test</a>
-						<br/>
-						<br/>
+                                            <a id="aid" href="#" onClick="myshow()">Click here to see the SOASTA CloudTest dashboard for this test</a>
+                                            <br/>
+                                            <br/>
 
-		                <iframe id="ifr" src="${it.Url}/Central?initResultsTab=${it.ResultID}" style="display:none" width="100%" height="1000"></iframe>  
+                            <iframe id="ifr" src="${it.Url}/Central?initResultsTab=${it.ResultID}" style="display:none" width="100%" height="1000"></iframe>
 
-            	</j:if>  
-            </j:otherwise>
+            </j:if>
             
+        </j:otherwise>
      </j:choose>
 
 </j:jelly>

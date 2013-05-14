@@ -42,7 +42,7 @@ import javax.xml.xpath.XPathFactory;
 public class JunitResultPublisher extends TestDataPublisher
 {
   private String urlOverride;
-  
+
   /**
    * Called by Jenkins when the job is initialized.
    * @param the URL override setting from the job configuration (can be {@code null}).
@@ -52,7 +52,7 @@ public class JunitResultPublisher extends TestDataPublisher
   {
     this.urlOverride = urlOverride;
   }
-  
+
   /**
    * Called by Jenkins when rendering the job configuration page.
    * @return the current URL override (if any).
@@ -61,23 +61,23 @@ public class JunitResultPublisher extends TestDataPublisher
   {
     return urlOverride;
   }
-  
+
   @Override
   public TestResultAction.Data getTestData(AbstractBuild<?, ?> build,
     Launcher launcher, BuildListener listener, TestResult testResult) throws IOException
   {
     Data data = new Data();
-    
+
     for (SuiteResult sr : testResult.getSuites())
     {
       JunitResultAction action = new JunitResultAction();
 
       // Get the local path of the JUnit XML file (may be on a slave node).
       String fileName = sr.getFile();
-      
+
       // Get local path of the build's workspace.
       String workspacePath = build.getWorkspace().getRemote();
-      
+
       // Is the JUnit XML file in the workspace?
       if (fileName.startsWith(workspacePath))
       {
@@ -89,7 +89,7 @@ public class JunitResultPublisher extends TestDataPublisher
           String relativePath = fileName.substring(workspacePath.length() + 1);
           String fileContent = build.getWorkspace().child(relativePath).readToString();
           Document junitXML = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(fileContent)));
-  
+
           XPath xPath = XPathFactory.newInstance().newXPath();
 
           // Extract the CloudTest result ID (if any) from the JUnit XML file.
@@ -99,10 +99,9 @@ public class JunitResultPublisher extends TestDataPublisher
           if (resultID != null && resultID.trim().length() > 0)
           {
             // We found a result ID.
-            
             String url;
-            
-            // Is the CloudTest URL specified at the job level? 
+
+            // Is the CloudTest URL specified at the job level?
             if (this.urlOverride != null && this.urlOverride.trim().length() > 0)
             {
               // The CloudTest URL is specified at the job level.
@@ -115,23 +114,41 @@ public class JunitResultPublisher extends TestDataPublisher
               // Extract it from the JUnit XML.
               url = (String)xPath.evaluate("//testsuite/@url", junitXML, XPathConstants.STRING);
             }
-            
+
             // Extract the detailed error messages, if any.
-            NodeList errorMessageNodes = (NodeList)xPath.evaluate("//testcase[1]/messages/message", junitXML, XPathConstants.NODESET);
-            List<String> errorMessages = new ArrayList<String>();
-            for (int i = 0; i < errorMessageNodes.getLength(); i++)
+            NodeList messageNodes = (NodeList)xPath.evaluate("//testcase[1]/messages/message", junitXML, XPathConstants.NODESET);
+            List<Message> messages = new ArrayList<Message>();
+
+            if (messageNodes != null)
             {
-              errorMessages.add(errorMessageNodes.item(i).getTextContent());
+              // Initialize the values that will be taken out
+              String type = null;      // The type of message (i.e. "validation-pass").
+              String message = null;   // The result message itself.
+              Message resultsMessage = null;    // The message object that will be created from the strings: type and message.
+              for (int i = 0; i < messageNodes.getLength(); i++)
+              {
+                // Checks to see if there's a type attribute associated with this message
+                // tag. This check is to make the code is backwards compatible with older
+                // versions of CloudTest, where the result messages did not contain type
+                // attributes.
+                type = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem("type") != null ?
+                  messageNodes.item(i).getAttributes().getNamedItem("type").getTextContent() : null;
+                message = messageNodes.item(i).getTextContent();
+                resultsMessage = new Message(type, message);
+                // Add it to the list.  It is assumed that the messages being parsed
+                // are already in chronological order.
+                messages.add(resultsMessage);
+              }
             }
-    
+
             if (resultID.equals("NA"))
               action.setPlayList(true);
-            
+
             // Store the result ID and URL in the Action object.
             // This will be used later on to render the test report.
             action.setResultID(resultID);
             action.setUrl(url);
-            action.setErrorMessages(errorMessages);
+            action.setMessages(messages);
           }
 
           data.addTestAction(sr.getCases().get(0).getId(), action);
@@ -149,9 +166,9 @@ public class JunitResultPublisher extends TestDataPublisher
 
     return data;
   }
-    
+
   @Override
-  public DescriptorImpl getDescriptor() 
+  public DescriptorImpl getDescriptor()
   {
     return (DescriptorImpl)super.getDescriptor();
   }
@@ -161,9 +178,9 @@ public class JunitResultPublisher extends TestDataPublisher
     private Map<String,JunitResultAction> actions = new HashMap<String,JunitResultAction>();
 
     @Override
-    public List<TestAction> getTestAction(TestObject testObject) 
+    public List<TestAction> getTestAction(TestObject testObject)
     {
-      if (testObject instanceof CaseResult) 
+      if (testObject instanceof CaseResult)
       {
         String id = testObject.getId();
         return Collections.<TestAction>singletonList(actions.get(id));
@@ -173,7 +190,7 @@ public class JunitResultPublisher extends TestDataPublisher
         return Collections.emptyList();
       }
     }
-    
+
     public void addTestAction(String testObjectId, JunitResultAction action)
     {
       actions.put(testObjectId, action);
@@ -181,17 +198,17 @@ public class JunitResultPublisher extends TestDataPublisher
   }
 
   @Extension
-  public static class DescriptorImpl extends Descriptor<TestDataPublisher> 
+  public static class DescriptorImpl extends Descriptor<TestDataPublisher>
   {
     /**
      * Called automatically by Jenkins when rendering the job configuration page.
      */
     @Override
-    public String getDisplayName() 
+    public String getDisplayName()
     {
       return "Include links to SOASTA CloudTest dashboards";
     }
-    
+
     /**
      * Called automatically by Jenkins whenever the "urlOverride"
      * field is modified by the user.
@@ -216,8 +233,8 @@ public class JunitResultPublisher extends TestDataPublisher
         {
           // Attempt to parse the URL.
           new URL(value);
-          
-          // Success! 
+
+          // Success!
           return FormValidation.ok();
         }
         catch (Exception e)
@@ -227,5 +244,5 @@ public class JunitResultPublisher extends TestDataPublisher
         }
       }
     }
-  } 
+  }
 }
