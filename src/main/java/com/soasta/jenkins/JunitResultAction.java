@@ -4,17 +4,34 @@
  */
 package com.soasta.jenkins;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 import hudson.tasks.junit.TestAction;
 
 public class JunitResultAction extends TestAction
 {
+  @XStreamAlias("resultID")
   private String m_resultID = "";
+
+  @XStreamAlias("url")
   private String m_url;
+
+  @XStreamAlias("isPlayList")
   private boolean m_isPlayList = false;
+
+  @XStreamAlias("exception")
   private String m_exception = "";
-  private List<String> m_errorMessages;
+
+  // For backward-compatibility only, hence not serializing
+  private transient List<String> m_errorMessages;
+
+  @XStreamAlias("messages")
+  private List<Message> m_messages;
 
   public String getIconFileName()
   {
@@ -84,5 +101,31 @@ public class JunitResultAction extends TestAction
   public void setErrorMessages(List<String> errorMessages)
   {
     m_errorMessages = errorMessages;
+  }
+
+  public void addErrorMessage(String errorMessage)
+  {
+    m_errorMessages.add(errorMessage);
+  }
+
+  public List<Message> getMessages()
+  {
+    return m_messages;
+  }
+
+  public void setMessages(List<Message> messages)
+  {
+    m_messages = messages;
+  }
+
+  public void addMessage(Message message)
+  {
+    m_messages.add(message);
+  }
+
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
+  {
+    in.defaultReadObject();
+    m_errorMessages = new ArrayList<String>();
   }
 }
