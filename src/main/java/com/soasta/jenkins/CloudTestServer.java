@@ -101,12 +101,13 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
     /**
      * Retrieves the build number of this CloudTest server.
+     * Postcondition: The build number returned is never null.
      */
     public VersionNumber getBuildNumber() throws IOException {
         final String[] v = new String[1];
         try {
             SAXParser sp = SAXParserFactory.newInstance().newSAXParser();
-            sp.parse(ProxyConfiguration.open(url).getInputStream(),new DefaultHandler() {
+            sp.parse(ProxyConfiguration.open(url).getInputStream(), new DefaultHandler() {
                 @Override
                 public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
                     if (systemId.endsWith(".dtd"))
@@ -124,15 +125,19 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
                     }
                 }
             });
-            LOGGER.warning("Build number not found in "+url);
+            LOGGER.warning("Build number not found in " + url);
         } catch (SAXException e) {
-            if (v[0]!=null)
+            if (v[0] != null)
                 return new VersionNumber(v[0]);
-            LOGGER.log(Level.WARNING, "Failed to load "+url, e);
+
+            LOGGER.log(Level.WARNING, "Failed to load " + url, e);
         } catch (ParserConfigurationException e) {
             throw new Error(e);
         }
-        return null;
+
+        // If we reach this point, then we failed to extract the build number.
+        throw new IOException("Failed to extract build number from \'" +
+          this.getDescriptor().getDisplayName() + "\': <" + url + ">.");
     }
 
     private HttpClient createClient() {
