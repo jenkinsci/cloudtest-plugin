@@ -51,7 +51,13 @@ public class SCommandInstaller extends DownloadFromUrlInstaller {
     }
 
     public FilePath scommand(Node node, TaskListener log) throws IOException, InterruptedException {
-        return performInstallation(node,log).child("bin/scommand");
+        FilePath scommandHome = performInstallation(node,log);
+        String os = (String)node.toComputer().getSystemProperties().get("os.name");
+        if (os != null && os.startsWith("Windows")) {
+            return scommandHome.child("bin/scommand.bat");
+        } else {
+            return scommandHome.child("bin/scommand");
+        }
     }
 
     // this is internal use only
