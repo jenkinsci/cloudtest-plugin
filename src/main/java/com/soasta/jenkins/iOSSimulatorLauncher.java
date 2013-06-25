@@ -64,20 +64,22 @@ public class iOSSimulatorLauncher extends Builder {
 
         EnvVars envs = build.getEnvironment(listener);
 
-        CloudTestServer s = getServer();
-        if (s == null)
+        CloudTestServer server = getServer();
+        if (server == null)
             throw new AbortException("No TouchTest server is configured in the system configuration.");
 
-        FilePath bin = new iOSAppInstallerInstaller(s).ios_sim_launcher(build.getBuiltOn(), listener);
+        FilePath bin = new iOSAppInstallerInstaller(server).ios_sim_launcher(build.getBuiltOn(), listener);
 
         // Determine TouchTest Agent URL for this server.
         // The simulator will automatically open this URL
         // in Mobile Safari.
         String agentURL;
-        if (url.endsWith("/"))
-            agentURL = url + "touchtest";
+        String cloudTestServerUrl = server.getUrl().toString();
+        
+        if (cloudTestServerUrl.endsWith("/"))
+            agentURL = cloudTestServerUrl + "touchtest";
         else
-            agentURL = url + "/touchtest";
+            agentURL = cloudTestServerUrl + "/touchtest";
 
         args.add(bin)
             .add("--app", envs.expand(app))
