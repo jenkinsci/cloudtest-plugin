@@ -67,8 +67,7 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         return maxDaysOfResults;
     }
 
-    public String getAdditionalOptions()
-    {
+    public String getAdditionalOptions() {
         return additionalOptions;
     }
 
