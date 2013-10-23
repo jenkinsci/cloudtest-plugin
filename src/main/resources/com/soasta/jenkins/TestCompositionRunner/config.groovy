@@ -11,13 +11,15 @@ f.entry(title:"Composition(s)",field:"composition") {
     f.expandableTextbox()
 }
 f.advanced {
-    f.block() {
-        table() {
-            f.optionalBlock(title:"Delete old results from the CloudTest server",field:"deleteOldResults") {
-                f.entry(title:"Days to keep results",field:"maxDaysOfResults") {
-                    f.number()
-                }
-            }
+    f.optionalBlock(title:"Delete old results from the CloudTest server",field:"deleteOldResults")
+    {
+        f.entry(title:"Days to keep results",field:"maxDaysOfResults")
+        {
+            f.number()
         }
+    }
+    f.entry(title:"Additional Options",field:"additionalOptions")
+    {
+        f.expandableTextbox()
     }
 }

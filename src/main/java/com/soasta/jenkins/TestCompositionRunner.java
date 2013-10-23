@@ -20,11 +20,10 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
-
+import hudson.util.QuotedStringTokenizer;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
-
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -42,17 +41,18 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
      * Composition to execute.
      */
     private final String composition;
-
     private final boolean deleteOldResults;
-
     private final int maxDaysOfResults;
+    private final String additionalOptions;
 
     @DataBoundConstructor
-    public TestCompositionRunner(String url, String composition, DeleteOldResultsSettings deleteOldResults) {
+    public TestCompositionRunner(String url, String composition, DeleteOldResultsSettings deleteOldResults,
+      String additionalOptions) {
         super(url);
         this.composition = composition;
         this.deleteOldResults = (deleteOldResults != null);
         this.maxDaysOfResults = (deleteOldResults == null ? 0 : deleteOldResults.maxDaysOfResults);
+        this.additionalOptions = additionalOptions;
     }
 
     public String getComposition() {
@@ -66,6 +66,11 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     public int getMaxDaysOfResults() {
         return maxDaysOfResults;
     }
+    
+    public String getAdditionalOptions()
+    {
+      return additionalOptions;
+    }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -75,13 +80,14 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         // Split by newline.
         EnvVars envs = build.getEnvironment(listener);
         String[] compositions = envs.expand(this.composition).split("[\r\n]+");
-
+        String[] options = new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray();
+        
         for (String composition : compositions) {
             ArgumentListBuilder args = getSCommandArgs(build, listener);
 
             args.add("cmd=play", "wait", "format=junitxml")
                 .add("name=" + composition);
-  
+            
             String fileName = composition + ".xml";
   
             // Strip off any leading slash characters (composition names
@@ -97,7 +103,10 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             
             // Make sure the directory exists.
             xml.getParent().mkdirs();
-
+            
+            // Add the additional options to the composition.
+            args.add(options);
+            
             // Run it!
             int exitCode = launcher
                 .launch()
