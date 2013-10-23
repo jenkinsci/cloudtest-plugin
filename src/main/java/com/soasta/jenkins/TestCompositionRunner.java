@@ -66,10 +66,9 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     public int getMaxDaysOfResults() {
         return maxDaysOfResults;
     }
-    
-    public String getAdditionalOptions()
-    {
-      return additionalOptions;
+
+    public String getAdditionalOptions() {
+        return additionalOptions;
     }
 
     @Override
@@ -81,13 +80,13 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         EnvVars envs = build.getEnvironment(listener);
         String[] compositions = envs.expand(this.composition).split("[\r\n]+");
         String[] options = new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray();
-        
+
         for (String composition : compositions) {
             ArgumentListBuilder args = getSCommandArgs(build, listener);
 
             args.add("cmd=play", "wait", "format=junitxml")
                 .add("name=" + composition);
-            
+
             String fileName = composition + ".xml";
   
             // Strip off any leading slash characters (composition names
@@ -95,7 +94,7 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             if (fileName.startsWith("/")) {
                 fileName = fileName.substring(1);
             }
-            
+
             // Put the file in the test results directory.
             fileName = resultsDir + File.separator + fileName;
             
@@ -103,10 +102,10 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             
             // Make sure the directory exists.
             xml.getParent().mkdirs();
-            
+
             // Add the additional options to the composition.
             args.add(options);
-            
+
             // Run it!
             int exitCode = launcher
                 .launch()
