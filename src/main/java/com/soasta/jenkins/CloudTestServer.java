@@ -14,11 +14,14 @@ import hudson.util.Secret;
 import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -30,6 +33,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
@@ -106,8 +110,17 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     public VersionNumber getBuildNumber() throws IOException {
         final String[] v = new String[1];
         try {
+            HttpClient hc = createClient();
+            
+            GetMethod get = new GetMethod(url.toExternalForm());
+            hc.executeMethod(get);
+            
+            if (get.getStatusCode() != 200) {
+                throw new IOException(get.getStatusLine().toString());
+            }
+
             SAXParser sp = SAXParserFactory.newInstance().newSAXParser();
-            sp.parse(ProxyConfiguration.open(url).getInputStream(), new DefaultHandler() {
+            sp.parse(get.getResponseBodyAsStream(), new DefaultHandler() {
                 @Override
                 public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
                     if (systemId.endsWith(".dtd"))
@@ -149,6 +162,10 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             if(jpc.getUserName() != null)
                 hc.getState().setProxyCredentials(AuthScope.ANY,new UsernamePasswordCredentials(jpc.getUserName(),jpc.getPassword()));
         }
+        
+        // CloudTest servers will reject the default Java user agent.
+        hc.getParams().setParameter(HttpMethodParams.USER_AGENT, "Jenkins/" + Jenkins.getVersion().toString());
+        
         return hc;
     }
 
