@@ -62,7 +62,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     private final String id;
     private final String name;
 
-    private boolean generatedIdOrName;
+    private transient boolean generatedIdOrName;
 
     @DataBoundConstructor
     public CloudTestServer(String url, String username, Secret password, String id, String name) throws MalformedURLException {
