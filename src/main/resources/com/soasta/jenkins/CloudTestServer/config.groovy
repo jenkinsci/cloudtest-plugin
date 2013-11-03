@@ -7,7 +7,7 @@ package com.soasta.jenkins.CloudTestServer;
 f=namespace(lib.FormTagLib)
 
 f.entry(title:"ID",field:"id") {
-    f.textbox()
+    f.readOnlyTextbox();
 }
 f.entry(title:"Name",field:"name") {
     f.textbox()
