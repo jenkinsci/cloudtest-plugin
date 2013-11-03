@@ -69,9 +69,9 @@ public class iOSSimulatorLauncher extends Builder {
         if (cloudTestServerID != null)
             return this;
 
-        LOGGER.info("Re-creating object to get server ID.");
+        CloudTestServer s = CloudTestServer.getByURL(getUrl());
 
-        CloudTestServer s = CloudTestServer.getByURL(url);
+        LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
         return new iOSSimulatorLauncher(url, s.getId(), app, sdk, family);
     }

@@ -23,9 +23,9 @@ public class RebootIOSDevice extends iOSAppInstallerBase {
         if (getCloudTestServerID() != null)
             return this;
 
-        LOGGER.info("Re-creating object to get server ID.");
-
         CloudTestServer s = CloudTestServer.getByURL(getUrl());
+
+        LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
         return new RebootIOSDevice(getUrl(), s.getId(), getAdditionalOptions());
     }
