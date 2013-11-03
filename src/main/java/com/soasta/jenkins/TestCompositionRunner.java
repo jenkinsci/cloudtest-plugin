@@ -76,9 +76,9 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         if (getCloudTestServerID() != null)
             return this;
 
-        LOGGER.info("Re-creating object to get server ID.");
-
         CloudTestServer s = CloudTestServer.getByURL(getUrl());
+
+        LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
         return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions);
     }
