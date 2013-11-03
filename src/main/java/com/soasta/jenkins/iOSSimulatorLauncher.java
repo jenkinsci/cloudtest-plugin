@@ -22,17 +22,20 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class iOSSimulatorLauncher extends Builder {
     /**
      * URL of {@link CloudTestServer}.
      */
     private final String url;
+    private final String cloudTestServerID;
     private final String app, sdk, family;
 
     @DataBoundConstructor
-    public iOSSimulatorLauncher(String url, String app, String sdk, String family) {
+    public iOSSimulatorLauncher(String url, String cloudTestServerID, String app, String sdk, String family) {
         this.url = url;
+        this.cloudTestServerID = cloudTestServerID;
         this.app = app;
         this.sdk = sdk;
         this.family = family;
@@ -40,6 +43,10 @@ public class iOSSimulatorLauncher extends Builder {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getCloudTestServerID() {
+        return cloudTestServerID;
     }
 
     public String getApp() {
@@ -55,7 +62,18 @@ public class iOSSimulatorLauncher extends Builder {
     }
 
     public CloudTestServer getServer() {
-        return CloudTestServer.get(url);
+        return CloudTestServer.getByID(cloudTestServerID);
+    }
+
+    public Object readResolve() throws IOException {
+        if (cloudTestServerID != null)
+            return this;
+
+        LOGGER.info("Re-creating object to get server ID.");
+
+        CloudTestServer s = CloudTestServer.getByURL(url);
+
+        return new iOSSimulatorLauncher(url, s.getId(), app, sdk, family);
     }
 
     @Override
@@ -124,4 +142,6 @@ public class iOSSimulatorLauncher extends Builder {
             }
         }
     }
+
+    private static final Logger LOGGER = Logger.getLogger(iOSSimulatorLauncher.class.getName());
 }

@@ -22,6 +22,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class ImportFiles extends AbstractSCommandBuilder {
     /**
@@ -45,8 +46,8 @@ public class ImportFiles extends AbstractSCommandBuilder {
     private final String additionalOptions;
 
     @DataBoundConstructor
-    public ImportFiles(String url, String files, String excludes, String mode, String additionalOptions) {
-        super(url);
+    public ImportFiles(String url, String cloudTestServerID, String files, String excludes, String mode, String additionalOptions) {
+        super(url, cloudTestServerID);
         this.files = files.trim();
         this.excludes = Util.fixEmptyAndTrim(excludes);
         this.mode = mode;
@@ -67,6 +68,17 @@ public class ImportFiles extends AbstractSCommandBuilder {
     
     public String getAdditionalOptions() {
         return additionalOptions;
+    }
+
+    public Object readResolve() throws IOException {
+        if (getCloudTestServerID() != null)
+            return this;
+
+        LOGGER.info("Re-creating object to get server ID.");
+
+        CloudTestServer s = CloudTestServer.getByURL(getUrl());
+
+        return new ImportFiles(getUrl(), s.getId(), files, excludes, mode, additionalOptions);
     }
 
     @Override
@@ -144,4 +156,6 @@ public class ImportFiles extends AbstractSCommandBuilder {
         // method requires commas.
         return files.replaceAll("[\r\n]+", ",");
     }
+
+    private static final Logger LOGGER = Logger.getLogger(ImportFiles.class.getName());
 }

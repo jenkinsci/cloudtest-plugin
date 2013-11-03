@@ -23,6 +23,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -32,14 +33,16 @@ public class MakeAppTouchTestable extends Builder {
      * URL of {@link CloudTestServer}.
      */
     private final String url;
+    private final String cloudTestServerID;
     private final String projectFile,target;
     private final String launchURL;
     private final boolean backupModifiedFiles;
     private final String additionalOptions;
 
     @DataBoundConstructor
-    public MakeAppTouchTestable(String url, String projectFile, String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
+    public MakeAppTouchTestable(String url, String cloudTestServerID, String projectFile, String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
         this.url = url;
+        this.cloudTestServerID = cloudTestServerID;
         this.projectFile = projectFile;
         this.target = target;
         this.launchURL = launchURL;
@@ -49,6 +52,10 @@ public class MakeAppTouchTestable extends Builder {
 
     public String getUrl() {
         return url;
+    }
+
+    public String getCloudTestServerID() {
+        return cloudTestServerID;
     }
 
     public String getProjectFile() {
@@ -72,7 +79,18 @@ public class MakeAppTouchTestable extends Builder {
     }
 
     public CloudTestServer getServer() {
-        return CloudTestServer.get(url);
+        return CloudTestServer.getByID(cloudTestServerID);
+    }
+
+    public Object readResolve() throws IOException {
+        if (cloudTestServerID != null)
+            return this;
+
+        LOGGER.info("Re-creating object to get server ID.");
+
+        CloudTestServer s = CloudTestServer.getByURL(url);
+
+        return new MakeAppTouchTestable(url, s.getId(), projectFile, target, launchURL, backupModifiedFiles, additionalOptions);
     }
 
     @Override
@@ -133,4 +151,6 @@ public class MakeAppTouchTestable extends Builder {
             }
         }
     }
+
+    private static final Logger LOGGER = Logger.getLogger(MakeAppTouchTestable.class.getName());
 }

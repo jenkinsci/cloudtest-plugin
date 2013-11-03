@@ -21,10 +21,12 @@ public abstract class iOSAppInstallerBase extends Builder {
    * URL of {@link CloudTestServer}.
    */
   private final String url;
+  private final String cloudTestServerID;
   private final String additionalOptions;
 
-  protected iOSAppInstallerBase(String url, String additionalOptions) {
+  protected iOSAppInstallerBase(String url, String cloudTestServerID, String additionalOptions) {
     this.url = url;
+    this.cloudTestServerID = cloudTestServerID;
     this.additionalOptions = additionalOptions;
   }
 
@@ -32,12 +34,16 @@ public abstract class iOSAppInstallerBase extends Builder {
       return url;
   }
 
+  public String getCloudTestServerID() {
+      return cloudTestServerID;
+  }
+
   public String getAdditionalOptions() {
       return additionalOptions;
   }
 
   public CloudTestServer getServer() {
-      return CloudTestServer.get(url);
+      return CloudTestServer.getByID(cloudTestServerID);
   }
   
   protected abstract void addArgs(EnvVars envs, ArgumentListBuilder args);

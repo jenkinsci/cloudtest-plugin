@@ -41,6 +41,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,8 +59,11 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     private final String username;
     private final Secret password;
 
+    private final String id;
+    private final String name;
+
     @DataBoundConstructor
-    public CloudTestServer(String url, String username, Secret password) throws MalformedURLException {
+    public CloudTestServer(String url, String username, Secret password, String id, String name) throws MalformedURLException {
         // normalization
         // TODO: can the service be running outside the /concerto/ URL?
         if (!url.endsWith("/")) url+='/';
@@ -68,6 +72,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         this.url = new URL(url);
         this.username = username;
         this.password = password;
+        this.id = (id == null ? UUID.randomUUID().toString() : id);
+        this.name = (name == null ? url + " (" + username + ")" : name);
     }
 
     public URL getUrl() {
@@ -80,6 +86,23 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
     public Secret getPassword() {
         return password;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Object readResolve() throws IOException {
+        if (id != null && name != null)
+            return this;
+
+        LOGGER.info("Re-creating object to generate a new server ID and name.");
+
+        return new CloudTestServer(url.toExternalForm(), username, password, id, name);
     }
 
     public FormValidation validate() throws IOException {
@@ -169,14 +192,27 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         return hc;
     }
 
-    public static CloudTestServer get(String url) {
+    public static CloudTestServer getByURL(String url) {
         List<CloudTestServer> servers = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class).getServers();
         for (CloudTestServer s : servers) {
             if (s.getUrl().toExternalForm().equals(url))
                 return s;
         }
         // if we can't find any, fall back to the default one
-        if (!servers.isEmpty())     return servers.get(0);
+        if (!servers.isEmpty())
+            return servers.get(0);
+        return null;
+    }
+
+    public static CloudTestServer getByID(String id) {
+        List<CloudTestServer> servers = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class).getServers();
+        for (CloudTestServer s : servers) {
+            if (s.getId().equals(id))
+                return s;
+        }
+        // if we can't find any, fall back to the default one
+        if (!servers.isEmpty())
+            return servers.get(0);
         return null;
     }
 
@@ -212,8 +248,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             return true;
         }
 
-        public FormValidation doValidate(@QueryParameter String url, @QueryParameter String username, @QueryParameter String password) throws IOException {
-            return new CloudTestServer(url,username,Secret.fromString(password)).validate();
+        public FormValidation doValidate(@QueryParameter String url, @QueryParameter String username, @QueryParameter String password, @QueryParameter String id, @QueryParameter String name) throws IOException {
+            return new CloudTestServer(url,username,Secret.fromString(password), id, name).validate();
         }
     }
 
