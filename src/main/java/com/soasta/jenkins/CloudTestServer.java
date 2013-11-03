@@ -62,6 +62,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     private final String id;
     private final String name;
 
+    private boolean generatedIdOrName;
+
     @DataBoundConstructor
     public CloudTestServer(String url, String username, Secret password, String id, String name) throws MalformedURLException {
         // normalization
@@ -72,8 +74,22 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         this.url = new URL(url);
         this.username = username;
         this.password = password;
-        this.id = (id == null ? UUID.randomUUID().toString() : id);
-        this.name = (name == null ? url + " (" + username + ")" : name);
+
+        if (id == null || id.isEmpty()) {
+            this.id = UUID.randomUUID().toString();
+            generatedIdOrName = true;
+        }
+        else {
+            this.id = id;
+        }
+
+        if (name == null || name.isEmpty()) {
+            this.name = url + " (" + username + ")";
+            generatedIdOrName = true;
+        }
+        else {
+            this.name = name;
+        }
     }
 
     public URL getUrl() {
@@ -96,8 +112,15 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         return name;
     }
 
+    public boolean hasGeneratedNameOrId() {
+        return generatedIdOrName;
+    }
+
     public Object readResolve() throws IOException {
-        if (id != null && name != null)
+        if (id != null &&
+            id.trim().length() > 0 &&
+            name != null &&
+            name.trim().length() > 0)
             return this;
 
         LOGGER.info("Re-creating object to generate a new server ID and name.");
@@ -224,7 +247,20 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         public DescriptorImpl() {
             load();
-            if (servers==null)  servers=new ArrayList<CloudTestServer>();
+            if (servers == null) {
+                servers = new ArrayList<CloudTestServer>();
+            } else {
+                for (CloudTestServer s : servers) {
+                    if (s.generatedIdOrName) {
+                        LOGGER.info("Persisting generated server IDs and/or names.");
+                        save();
+
+                        // Calling save() once covers all servers,
+                        // so we can stop looping.
+                        break;
+                    }
+                }
+            }
         }
 
         @Override
@@ -239,7 +275,6 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         public void setServers(Collection<? extends CloudTestServer> servers) {
             this.servers = new ArrayList<CloudTestServer>(servers);
         }
-
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
