@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
-
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.ProxyConfiguration;
@@ -22,19 +21,25 @@ public abstract class AbstractSCommandBuilder extends Builder {
      * URL of {@link CloudTestServer}.
      */
     private final String url;
-    
-    public AbstractSCommandBuilder(String url) {
+    private final String cloudTestServerID;
+
+    public AbstractSCommandBuilder(String url, String cloudTestServerID) {
         this.url = url;
+        this.cloudTestServerID = cloudTestServerID;
     }
-  
+
     public CloudTestServer getServer() {
-        return CloudTestServer.get(url);
+        return CloudTestServer.getByID(cloudTestServerID);
     }
-  
+
     public String getUrl() {
         return url;
     }
-  
+
+    public String getCloudTestServerID() {
+        return cloudTestServerID;
+    }
+
     protected ArgumentListBuilder getSCommandArgs(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
       CloudTestServer s = getServer();
       if (s == null)

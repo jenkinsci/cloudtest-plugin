@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Collections;
+import java.util.logging.Logger;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -46,9 +47,9 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     private final String additionalOptions;
 
     @DataBoundConstructor
-    public TestCompositionRunner(String url, String composition, DeleteOldResultsSettings deleteOldResults,
+    public TestCompositionRunner(String url, String cloudTestServerID, String composition, DeleteOldResultsSettings deleteOldResults,
       String additionalOptions) {
-        super(url);
+        super(url, cloudTestServerID);
         this.composition = composition;
         this.deleteOldResults = (deleteOldResults != null);
         this.maxDaysOfResults = (deleteOldResults == null ? 0 : deleteOldResults.maxDaysOfResults);
@@ -69,6 +70,17 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
 
     public String getAdditionalOptions() {
         return additionalOptions;
+    }
+
+    public Object readResolve() throws IOException {
+        if (getCloudTestServerID() != null)
+            return this;
+
+        LOGGER.info("Re-creating object to get server ID.");
+
+        CloudTestServer s = CloudTestServer.getByURL(getUrl());
+
+        return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions);
     }
 
     @Override
@@ -194,8 +206,8 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             }
         }
 
-        public AutoCompletionCandidates doAutoCompleteComposition(@QueryParameter String url) throws IOException, InterruptedException {
-            CloudTestServer s = CloudTestServer.get(url);
+        public AutoCompletionCandidates doAutoCompleteComposition(@QueryParameter String cloudTestServerID) throws IOException, InterruptedException {
+            CloudTestServer s = CloudTestServer.getByID(cloudTestServerID);
 
             ArgumentListBuilder args = new ArgumentListBuilder();
             args.add(install(s))
@@ -237,4 +249,6 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             return maxDaysOfResults;
         }
     }
+
+    private static final Logger LOGGER = Logger.getLogger(TestCompositionRunner.class.getName());
 }

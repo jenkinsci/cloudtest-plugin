@@ -6,10 +6,8 @@ package com.soasta.jenkins.iOSAppInstaller;
 
 f=namespace(lib.FormTagLib)
 
-if (descriptor.showUrlField()) {
-    f.entry(title:"CloudTest Server",field:"url") {
-        f.select()
-    }
+f.entry(title:"CloudTest Server",field:"cloudTestServerID") {
+    f.select()
 }
 f.entry(title:"IPA file",field:"ipa") {
     f.textbox()

@@ -4,7 +4,6 @@
  */
 package com.soasta.jenkins;
 
-import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;

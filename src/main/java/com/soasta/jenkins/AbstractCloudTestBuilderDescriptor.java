@@ -26,16 +26,12 @@ public abstract class AbstractCloudTestBuilderDescriptor extends BuildStepDescri
         return true;
     }
 
-    public ListBoxModel doFillUrlItems() {
+    public ListBoxModel doFillCloudTestServerIDItems() {
         ListBoxModel r = new ListBoxModel();
         for (CloudTestServer s : serverDescriptor.getServers()) {
-            r.add(s.getUrl().toExternalForm());
+            r.add(s.getName(), s.getId());
         }
         return r;
-    }
-
-    public boolean showUrlField() {
-        return serverDescriptor.getServers().size()>1;
     }
 
     protected FormValidation validateFileMask(AbstractProject project, String value) throws IOException {
