@@ -82,7 +82,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
             // This is probably a configuration created using
             // an older version of the plug-in (before ID and name
-            // existed).  Save a flag so we can write the new
+            // existed).  Set a flag so we can write the new
             // values after initialization (see DescriptorImpl).
             generatedIdOrName = true;
         }
@@ -96,7 +96,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
             // This is probably a configuration created using
             // an older version of the plug-in (before ID and name
-            // existed).  Save a flag so we can write the new
+            // existed).  Set a flag so we can write the new
             // values after initialization (see DescriptorImpl).
             generatedIdOrName = true;
         }
@@ -271,7 +271,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             } else {
                 // If any of the servers that we loaded was
                 // missing a name or ID, and had to auto-generate
-                // it, then persist the auto-generated values.
+                // it, then persist the auto-generated values now.
                 for (CloudTestServer s : servers) {
                     if (s.generatedIdOrName) {
                         LOGGER.info("Persisting generated server IDs and/or names.");
