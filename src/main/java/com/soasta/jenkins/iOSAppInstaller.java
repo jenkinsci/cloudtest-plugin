@@ -42,6 +42,11 @@ public class iOSAppInstaller extends iOSAppInstallerBase {
         if (getCloudTestServerID() != null)
             return this;
 
+        // We don't have a server ID.
+        // This means the builder config is based an older version the plug-in.
+
+        // Look up the server by URL instead.
+        // We'll use the ID going forward.
         CloudTestServer s = CloudTestServer.getByURL(getUrl());
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");

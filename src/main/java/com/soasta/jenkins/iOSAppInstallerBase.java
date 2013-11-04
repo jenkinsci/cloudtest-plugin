@@ -18,9 +18,13 @@ import hudson.util.QuotedStringTokenizer;
 
 public abstract class iOSAppInstallerBase extends Builder {
   /**
-   * URL of {@link CloudTestServer}.
+   * URL of the server to use (deprecated).
    */
   private final String url;
+  /**
+   * ID of the server to use.
+   * @see CloudTestServer
+   */
   private final String cloudTestServerID;
   private final String additionalOptions;
 
