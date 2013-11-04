@@ -30,9 +30,13 @@ import java.util.logging.Logger;
  */
 public class MakeAppTouchTestable extends Builder {
     /**
-     * URL of {@link CloudTestServer}.
+     * URL of the server to use (deprecated).
      */
     private final String url;
+    /**
+     * ID of the server to use.
+     * @see CloudTestServer
+     */
     private final String cloudTestServerID;
     private final String projectFile,target;
     private final String launchURL;
@@ -86,6 +90,11 @@ public class MakeAppTouchTestable extends Builder {
         if (cloudTestServerID != null)
             return this;
 
+        // We don't have a server ID.
+        // This means the builder config is based an older version the plug-in.
+
+        // Look up the server by URL instead.
+        // We'll use the ID going forward.
         CloudTestServer s = CloudTestServer.getByURL(getUrl());
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");

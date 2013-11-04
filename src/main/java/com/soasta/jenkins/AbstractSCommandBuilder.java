@@ -18,9 +18,13 @@ import hudson.util.ArgumentListBuilder;
 
 public abstract class AbstractSCommandBuilder extends Builder {
     /**
-     * URL of {@link CloudTestServer}.
+     * URL of the server to use (deprecated).
      */
     private final String url;
+    /**
+     * ID of the server to use.
+     * @see CloudTestServer
+     */
     private final String cloudTestServerID;
 
     public AbstractSCommandBuilder(String url, String cloudTestServerID) {

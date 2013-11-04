@@ -52,7 +52,7 @@ import java.util.logging.Logger;
  */
 public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     /**
-     * URL like "http://testdrive.soasta.com/concerto/"
+     * URL like "http://touchtestlite.soasta.com/concerto/"
      */
     private final URL url;
 
@@ -72,19 +72,32 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         if (!url.endsWith("/concerto/"))
             url+="concerto/";
         this.url = new URL(url);
+
         this.username = username;
         this.password = password;
 
+        // If the ID is empty, auto-generate one.
         if (id == null || id.isEmpty()) {
             this.id = UUID.randomUUID().toString();
+
+            // This is probably a configuration created using
+            // an older version of the plug-in (before ID and name
+            // existed).  Save a flag so we can write the new
+            // values after initialization (see DescriptorImpl).
             generatedIdOrName = true;
         }
         else {
             this.id = id;
         }
 
+        // If the name is empty, default to URL + user name.
         if (name == null || name.isEmpty()) {
             this.name = url + " (" + username + ")";
+
+            // This is probably a configuration created using
+            // an older version of the plug-in (before ID and name
+            // existed).  Save a flag so we can write the new
+            // values after initialization (see DescriptorImpl).
             generatedIdOrName = true;
         }
         else {
@@ -112,10 +125,6 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         return name;
     }
 
-    public boolean hasGeneratedNameOrId() {
-        return generatedIdOrName;
-    }
-
     public Object readResolve() throws IOException {
         if (id != null &&
             id.trim().length() > 0 &&
@@ -123,8 +132,18 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             name.trim().length() > 0)
             return this;
 
-        LOGGER.info("Re-creating object to generate a new server ID and name.");
+        // Either the name or ID is missing.
+        // This means the config is based an older version the plug-in.
 
+        // The constructor handles this, but XStream doesn't go
+        // through the same code path (as far as I can tell).  Instead,
+        // we create a new CloudTestServer object, which will include an
+        // auto-generated name and ID, and return that instead.
+
+        // When Jenkins is finished loading everything, we'll go back
+        // and write the auto-generated values to disk, so this logic
+        // should only execute once.  See DescriptorImpl constructor.
+        LOGGER.info("Re-creating object to generate a new server ID and name.");
         return new CloudTestServer(url.toExternalForm(), username, password, id, name);
     }
 
@@ -250,6 +269,9 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             if (servers == null) {
                 servers = new ArrayList<CloudTestServer>();
             } else {
+                // If any of the servers that we loaded was
+                // missing a name or ID, and had to auto-generate
+                // it, then persist the auto-generated values.
                 for (CloudTestServer s : servers) {
                     if (s.generatedIdOrName) {
                         LOGGER.info("Persisting generated server IDs and/or names.");
