@@ -96,7 +96,8 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         // Split by newline.
         EnvVars envs = build.getEnvironment(listener);
         String[] compositions = envs.expand(this.composition).split("[\r\n]+");
-        String[] options = new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray();
+        String[] options = additionalOptions == null || envs.expand(additionalOptions) == null ?
+          null : new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray();
 
         for (String composition : compositions) {
             ArgumentListBuilder args = getSCommandArgs(build, listener);
@@ -120,9 +121,12 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             // Make sure the directory exists.
             xml.getParent().mkdirs();
 
-            // Add the additional options to the composition.
-            args.add(options);
-
+            // Add the additional options to the composition if there are any.
+            if (options != null)
+            {
+              args.add(options);
+            }
+            
             // Run it!
             int exitCode = launcher
                 .launch()
