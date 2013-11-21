@@ -96,8 +96,10 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         // Split by newline.
         EnvVars envs = build.getEnvironment(listener);
         String[] compositions = envs.expand(this.composition).split("[\r\n]+");
-        String[] options = additionalOptions == null || envs.expand(additionalOptions) == null ?
-          null : new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray();
+        String additionalOptionsExpanded = additionalOptions == null ? 
+          null : envs.expand(additionalOptions);
+        String[] options = additionalOptionsExpanded == null ?
+          null : new QuotedStringTokenizer(additionalOptionsExpanded).toArray();
 
         for (String composition : compositions) {
             ArgumentListBuilder args = getSCommandArgs(build, listener);
