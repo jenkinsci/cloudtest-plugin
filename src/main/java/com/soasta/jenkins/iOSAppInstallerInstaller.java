@@ -15,6 +15,32 @@ import hudson.util.VersionNumber;
 import java.io.IOException;
 import java.net.URL;
 
+/*******************************************************************************************************************************
+ * START (Jenkins User-Agent change related imports)
+ *******************************************************************************************************************************/
+import static hudson.FilePath.TarCompression.GZIP;
+import hudson.Functions;
+import hudson.ProxyConfiguration;
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
+import hudson.util.IOUtils;
+import java.io.File;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URLConnection;
+import java.util.Enumeration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
+
+import org.apache.commons.io.input.CountingInputStream;
+import org.apache.tools.zip.ZipEntry;
+import org.apache.tools.zip.ZipFile;
+/*******************************************************************************************************************************
+ * END (Jenkins User-Agent change related imports)
+ *******************************************************************************************************************************/
+
 /**
  * Installs "iOS App Installer" from CloudTest.
  *
@@ -43,13 +69,269 @@ public class iOSAppInstallerInstaller extends DownloadFromUrlInstaller {
         return i;
     }
 
+    /*******************************************************************************************************************************
+     * START (Jenkins User-Agent related code changes)
+     *******************************************************************************************************************************/
+    /**
+     * The following code changes the file download request for iOSAppInstaller to have 
+     * a User-Agent of "Jenkins/<Jenkins version #>" instead of "Java/<Java version #>".
+     * This allow this call to correctly identify itself as coming from the Jenkins 
+     * plugin.
+     * 
+     * WARNING: This code is directly copied from Jenkins (1.544) code.
+     * A few changes were made to logging and to make the code work.  May be
+     * vulnerable to Jenkins base code changes in the future.  Issues related
+     * to this may crop up in the future concerning iOSAppInstaller downloading
+     * because of this.  This addition is because of Bug 71924.
+     * 
+     * TODO: Remove code when Jenkins will properly identify itself in the 
+     * User-Agent.  All the code below is tied to being able to add to the
+     * URLConnection that the User-Agent is, instead, "Jenkins/..." and not
+     * "Java/...".
+     */
+    public FilePath performInstallation(ToolInstallation tool, Node node, TaskListener log) throws IOException, InterruptedException {
+      
+      try
+      {
+        return super.performInstallation(tool, node, log);
+      }
+      catch (IOException e)
+      {
+        FilePath expected = preferredLocation(tool, node);
+        Installable inst = getInstallable();
+        
+        if(installIfNecessaryFrom(expected, new URL(inst.url), log, "Unpacking " + inst.url + " to " + expected + " on " + node.getDisplayName())) {
+          expected.child(".timestamp").delete(); // we don't use the timestamp
+          FilePath base = findPullUpDirectory(expected);
+          if(base!=null && base!=expected)
+              base.moveAllChildrenTo(expected);
+          // leave a record for the next up-to-date check
+          expected.child(".installedFrom").write(inst.url,"UTF-8");
+          expected.act(new ChmodRecAPlusX());
+        }
+        
+        return expected;
+      }
+    }
+    
+    /**
+     * Sets execute permission on all files, since unzip etc. might not do this.
+     * Hackish, is there a better way?
+     */
+    static class ChmodRecAPlusX implements FileCallable<Void> {
+        private static final long serialVersionUID = 1L;
+        public Void invoke(File d, VirtualChannel channel) throws IOException {
+            if(!Functions.isWindows())
+                process(d);
+            return null;
+        }
+        private void process(File f) {
+            if (f.isFile()) {
+                f.setExecutable(true, false);
+            } else {
+                File[] kids = f.listFiles();
+                if (kids != null) {
+                    for (File kid : kids) {
+                        process(kid);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * (From FilePath.java)
+     * Given a zip file, extracts it to the given target directory, if necessary.
+     *
+     * <p>
+     * This method is a convenience method designed for installing a binary package to a location
+     * that supports upgrade and downgrade. Specifically,
+     *
+     * <ul>
+     * <li>If the target directory doesn't exist {@linkplain #mkdirs() it'll be created}.
+     * <li>If the timestamp left in the directory doesn't match with the timestamp of the current archive file,
+     *     the directory contents will be discarded and the archive file will be re-extracted.
+     * <li>If the connection is refused but the target directory already exists, it is left alone.
+     * </ul>
+     *
+     * @param archive
+     *      The resource that represents the zip file. This URL must support the "Last-Modified" header.
+     *      (Most common usage is to get this from {@link ClassLoader#getResource(String)})
+     * @param listener
+     *      If non-null, a message will be printed to this listener once this method decides to
+     *      extract an archive.
+     * @return
+     *      true if the archive was extracted. false if the extraction was skipped because the target directory
+     *      was considered up to date.
+     * @since 1.299
+     */
+    public boolean installIfNecessaryFrom(FilePath expected, URL archive, TaskListener listener, String message) throws IOException, InterruptedException {
+        try {
+            FilePath timestamp = expected.child(".timestamp");
+            URLConnection con;
+            try {
+                con = ProxyConfiguration.open(archive);
+                con.setRequestProperty("User-Agent", "Jenkins/" + Jenkins.getVersion().toString());
+                LOGGER.log(Level.INFO, "Setting User-Agent for download to " + con.getRequestProperty("User-Agent"));
+                if (timestamp.exists()) {
+                    con.setIfModifiedSince(timestamp.lastModified());
+                }
+                con.connect();
+            } catch (IOException x) {
+                if (expected.exists()) {
+                    // Cannot connect now, so assume whatever was last unpacked is still OK.
+                    if (listener != null) {
+                        LOGGER.log(Level.INFO, "Skipping installation of " + archive + " to " + expected.getRemote() + ": " + x);
+                    }
+                    return false;
+                } else {
+                    throw x;
+                }
+            }
+
+            LOGGER.log(Level.INFO, "Connection response code is: " + ((HttpURLConnection)con).getResponseCode());
+            if (con instanceof HttpURLConnection
+                    && ((HttpURLConnection)con).getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                return false;
+            }
+
+            long sourceTimestamp = con.getLastModified();
+
+            if(expected.exists()) {
+                LOGGER.log(Level.INFO, "Not downloading a new iOSAppInstaller as one already exists.");
+                if(timestamp.exists() && sourceTimestamp ==timestamp.lastModified())
+                    return false;   // already up to date
+                expected.deleteContents();
+            } else {
+              expected.mkdirs();
+            }
+
+            if(listener!=null)
+              LOGGER.log(Level.INFO, message);
+
+            if (expected.isRemote()) {
+                LOGGER.log(Level.INFO, "This is a remote request.");
+                // First try to download from the slave machine.
+                try {
+                    expected.act(new Unpack(archive));
+                    timestamp.touch(sourceTimestamp);
+                    return true;
+                } catch (IOException x) {
+                    if (listener != null) {
+                        x.printStackTrace(listener.error("Failed to download " + archive + " from slave; will retry from master"));
+                    }
+                }
+            }
+
+            // for HTTP downloads, enable automatic retry for added resilience
+            InputStream in = archive.getProtocol().startsWith("http") ? ProxyConfiguration.getInputStream(archive) : con.getInputStream();
+            CountingInputStream cis = new CountingInputStream(in);
+            try {
+                if(archive.toExternalForm().endsWith(".zip")) {
+                  LOGGER.log(Level.INFO, "Archive ends with '.zip'.  Starting unzip.");
+                  expected.unzipFrom(cis);
+                }
+                else
+                  expected.untarFrom(cis,GZIP);
+            } catch (IOException e) {
+                throw new IOException(String.format("Failed to unpack %s (%d bytes read of total %d)",
+                        archive,cis.getByteCount(),con.getContentLength()),e);
+            }
+            timestamp.touch(sourceTimestamp);
+            return true;
+        } catch (IOException e) {
+            throw new IOException("Failed to install "+archive+" to "+ expected.getRemote(),e);
+        }
+    }
+    
+    private static final class Unpack implements FileCallable<Void> {
+      private static final long serialVersionUID = 1L;
+      
+      private final URL archive;
+      Unpack(URL archive) {
+          this.archive = archive;
+      }
+      public Void invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
+          InputStream in = archive.openStream();
+          try {
+              CountingInputStream cis = new CountingInputStream(in);
+              try {
+                  LOGGER.log(Level.INFO, "Invoke called for Unpack class.");
+                  if (archive.toExternalForm().endsWith(".zip")) {
+                    LOGGER.log(Level.INFO, "Archive unzipped as it ends with '.zip'.  Starting unzip.");
+                    unzip(dir, cis);
+                  }
+              } catch (IOException x) {
+                  throw new IOException(String.format("Failed to unpack %s (%d bytes read)", archive, cis.getByteCount()), x);
+              }
+          } finally {
+              in.close();
+          }
+          return null;
+      }
+      
+      private static void unzip(File dir, InputStream in) throws IOException {
+        File tmpFile = File.createTempFile("tmpzip", null); // uses java.io.tmpdir
+        try {
+            IOUtils.copy(in, tmpFile);
+            unzip(dir,tmpFile);
+        }
+        finally {
+            tmpFile.delete();
+        }
+      }
+      
+      static private void unzip(File dir, File zipFile) throws IOException {
+          dir = dir.getAbsoluteFile();    // without absolutization, getParentFile below seems to fail
+          ZipFile zip = new ZipFile(zipFile);
+          @SuppressWarnings("unchecked")
+          Enumeration<ZipEntry> entries = zip.getEntries();
+
+          try {
+              while (entries.hasMoreElements()) {
+                  ZipEntry e = entries.nextElement();
+                  File f = new File(dir, e.getName());
+                  if (e.isDirectory()) {
+                      f.mkdirs();
+                  } else {
+                      File p = f.getParentFile();
+                      if (p != null) {
+                          p.mkdirs();
+                      }
+                      InputStream input = zip.getInputStream(e);
+                      try {
+                          IOUtils.copy(input, f);
+                      } finally {
+                          input.close();
+                      }
+                      try {
+                          FilePath target = new FilePath(f);
+                          int mode = e.getUnixMode();
+                          if (mode!=0)    // Ant returns 0 if the archive doesn't record the access mode
+                              target.chmod(mode);
+                      } catch (InterruptedException ex) {
+                          LOGGER.log(Level.WARNING, "unable to set permissions", ex);
+                      }
+                      f.setLastModified(e.getTime());
+                  }
+              }
+          } finally {
+              zip.close();
+          }
+      }
+    }
+    /*******************************************************************************************************************************
+     * END (Jenkins User-Agent related code changes)
+     *******************************************************************************************************************************/
+    
     /**
      * We implement {@link ToolInstaller} just so that we can reuse its installation code.
      * And because of this, we collapse {@link ToolInstallation} and {@link ToolInstaller}.
      */
     public FilePath performInstallation(Node node, TaskListener log) throws IOException, InterruptedException {
-        return super.performInstallation(
-                new FakeInstallation(id), node, log);
+      //return super.performInstallation(
+      return performInstallation(
+                new FakeInstallation(id), node, log);    // Jenkins User-Agent related code change
     }
 
     public FilePath ios_app_installer(Node node, TaskListener log) throws IOException, InterruptedException {
@@ -68,4 +350,6 @@ public class iOSAppInstallerInstaller extends DownloadFromUrlInstaller {
             return "Install CloudTest iOS App Installer";
         }
     }
+    
+    private static final Logger LOGGER = Logger.getLogger(iOSAppInstallerInstaller.class.getName());
 }
