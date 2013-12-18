@@ -10,7 +10,6 @@ import hudson.model.TaskListener;
 import hudson.tools.DownloadFromUrlInstaller;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
-import hudson.util.VersionNumber;
 
 import java.io.IOException;
 import java.net.URL;
@@ -20,35 +19,27 @@ import java.net.URL;
  *
  * @author Kohsuke Kawaguchi
  */
-public class iOSAppInstallerInstaller extends DownloadFromUrlInstaller {
-    private final CloudTestServer server;
-    private final VersionNumber buildNumber;
-
-    private iOSAppInstallerInstaller(CloudTestServer server, VersionNumber buildNumber) {
-        super("cloudtest-iosappinstaller-"+buildNumber);
-        this.server = server;
-        this.buildNumber = buildNumber;
-    }
-
+public class iOSAppInstallerInstaller extends CommonInstaller {
+  
     public iOSAppInstallerInstaller(CloudTestServer server) throws IOException {
-        this(server,server.getBuildNumber());
+      super(server, Installers.iOS_APP_INSTALLER);
     }
 
     @Override
     public Installable getInstallable() throws IOException {
         Installable i = new Installable();
-        i.url = new URL(server.getUrl(),"downloads/mobile/iOSAppInstaller.zip").toExternalForm();
+        i.url = new URL(getServer().getUrl(), getInstallerType().getInstallerDownloadPath()).toExternalForm();
         i.id = id;
-        i.name = buildNumber.toString();
+        i.name = getBuildNumber().toString();
         return i;
     }
-
+    
     /**
      * We implement {@link ToolInstaller} just so that we can reuse its installation code.
      * And because of this, we collapse {@link ToolInstallation} and {@link ToolInstaller}.
      */
     public FilePath performInstallation(Node node, TaskListener log) throws IOException, InterruptedException {
-        return super.performInstallation(
+      return super.performInstallation(
                 new FakeInstallation(id), node, log);
     }
 
@@ -59,7 +50,6 @@ public class iOSAppInstallerInstaller extends DownloadFromUrlInstaller {
     public FilePath ios_sim_launcher(Node node, TaskListener log) throws IOException, InterruptedException {
         return performInstallation(node,log).child("bin/ios_sim_launcher");
     }
-
 
     // this is internal use only
     // @Extension
