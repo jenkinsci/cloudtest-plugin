@@ -68,12 +68,7 @@ public abstract class iOSAppInstallerBase extends Builder {
       addArgs(envs, args);
       args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
   
-      int exitCode = launcher
-          .launch()
-          .cmds(args)
-          .pwd(build.getWorkspace())
-          .stdout(listener)
-          .join();
+      int exitCode = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
 
       return exitCode == 0;
   }
