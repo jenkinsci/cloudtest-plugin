@@ -10,7 +10,6 @@ import hudson.model.TaskListener;
 import hudson.tools.DownloadFromUrlInstaller;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
-import hudson.util.VersionNumber;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,26 +17,18 @@ import java.net.URL;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class SCommandInstaller extends DownloadFromUrlInstaller {
-    private final CloudTestServer server;
-    private final VersionNumber buildNumber;
-
-    private SCommandInstaller(CloudTestServer server, VersionNumber buildNumber) {
-        super("cloudtest-scommand-"+buildNumber);
-        this.server = server;
-        this.buildNumber = buildNumber;
-    }
+public class SCommandInstaller extends CommonInstaller {
 
     public SCommandInstaller(CloudTestServer server) throws IOException {
-        this(server,server.getBuildNumber());
+      super(server, Installers.SCOMMAND_INSTALLER);
     }
 
     @Override
     public Installable getInstallable() throws IOException {
         Installable i = new Installable();
-        i.url = new URL(server.getUrl(),"downloads/scommand/scommand.zip").toExternalForm();
+        i.url = new URL(getServer().getUrl(), getInstallerType().getInstallerDownloadPath()).toExternalForm();
         i.id = id;
-        i.name = buildNumber.toString();
+        i.name = getBuildNumber().toString();
         return i;
     }
 
