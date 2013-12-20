@@ -7,15 +7,15 @@ package com.soasta.jenkins;
 public enum Installers
 {
   /**
-   * 
+   * iOSAppInstaller CT link name.
    */
   iOS_APP_INSTALLER ("iosappinstaller", "mobile/iOSAppInstaller.zip"),
   /**
-   * MATT installer CT link name
+   * MATT installer CT link name.
    */
   MATT_INSTALLER ("makeTouchTestable", "mobile/MakeAppTouchTestable.zip"),
   /**
-   * 
+   * SCommand CT link name.
    */
   SCOMMAND_INSTALLER ("scommand", "scommand/scommand.zip");
   

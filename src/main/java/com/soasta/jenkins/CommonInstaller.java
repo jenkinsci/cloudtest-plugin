@@ -79,7 +79,8 @@ public class CommonInstaller extends DownloadFromUrlInstaller
    * This allow this call to correctly identify itself as coming from the Jenkins 
    * plugin.
    * 
-   * WARNING: This code is directly copied from Jenkins (1.544) code.
+   * WARNING: This code was taken from Jenkins (1.544) src, FilePath.java
+   * and DownloadFromUrlInstaller.java.
    * A few changes were made to logging and to make the code work.  May be
    * vulnerable to Jenkins base code changes in the future.  Issues related
    * to this may crop up in the future concerning any type of installer 
@@ -171,6 +172,7 @@ public class CommonInstaller extends DownloadFromUrlInstaller
           URLConnection con;
           try {
               con = ProxyConfiguration.open(archive);
+              // Jira Bug JENKINS-21033: Changing the User-Agent from "Java/<Java version #>" to "Jenkins/<Jenkins version #>"
               con.setRequestProperty("User-Agent", "Jenkins/" + Jenkins.getVersion().toString());
               LOGGER.log(Level.INFO, "Setting User-Agent for download to " + con.getRequestProperty("User-Agent") +
                 " for file " + archive.getPath());
@@ -241,6 +243,7 @@ public class CommonInstaller extends DownloadFromUrlInstaller
     }
     public Void invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
         URLConnection con = archive.openConnection();
+        // Jira Bug JENKINS-21033: Changing the User-Agent from "Java/<Java version #>" to "Jenkins/<Jenkins version #>"
         con.setRequestProperty("User-Agent", "Jenkins/" + Jenkins.getVersion().toString());
         InputStream in = con.getInputStream();
         try {
