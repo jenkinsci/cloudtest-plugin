@@ -183,12 +183,14 @@ public class JunitResultPublisher extends TestDataPublisher
       if (testObject instanceof CaseResult)
       {
         String id = testObject.getId();
-        return Collections.<TestAction>singletonList(actions.get(id));
+        JunitResultAction a = actions.get(id);
+        if (a!=null)
+        {
+          return Collections.<TestAction>singletonList(a);
+        }
       }
-      else
-      {
-        return Collections.emptyList();
-      }
+
+      return Collections.emptyList();
     }
 
     public void addTestAction(String testObjectId, JunitResultAction action)
