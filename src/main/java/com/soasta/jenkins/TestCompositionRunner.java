@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
+ * Copyright (c) 2012-2014, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
