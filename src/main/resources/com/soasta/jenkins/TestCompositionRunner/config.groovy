@@ -14,6 +14,12 @@ f.advanced {
             f.number()
         }
     }
+    f.entry(title:"System Properties",field:"systemProperties") {
+        f.expandableTextbox()
+    }
+    f.entry(title:"Custom Properties",field:"customProperties") {
+        f.expandableTextbox()
+    }
     f.entry(title:"Additional Options",field:"additionalOptions") {
         f.expandableTextbox()
     }
