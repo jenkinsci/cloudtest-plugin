@@ -6,7 +6,7 @@ package com.soasta.jenkins.makeAppTouchTestable;
 
 public enum InputType {
   
-    APP ("-appfile"),
+    APP ("-appbundle"),
     IPA ("-ipa"),
     PROJECT ("-project");
   
