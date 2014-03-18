@@ -180,7 +180,7 @@ public class MakeAppTouchTestable extends Builder {
             ListBoxModel items = new ListBoxModel();
             items.add("Project", InputType.PROJECT.toString());
             items.add("IPA", InputType.IPA.toString());
-            items.add("APP File", InputType.APP.toString());
+            items.add("APP Bundle", InputType.APP.toString());
             return items;
         }
     }
