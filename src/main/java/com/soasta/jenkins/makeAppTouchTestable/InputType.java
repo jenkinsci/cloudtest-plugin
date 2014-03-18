@@ -2,18 +2,17 @@
  * Copyright (c) 2012-2014, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
-package com.soasta.jenkins;
+package com.soasta.jenkins.makeAppTouchTestable;
 
-public enum MATTInputType {
+public enum InputType {
   
-    APK ("-apk"),
     APP ("-appfile"),
     IPA ("-ipa"),
     PROJECT ("-project");
   
     String inputType;
   
-    private MATTInputType(String inputType) {
+    private InputType(String inputType) {
         this.inputType = inputType;
     }
     
@@ -21,20 +20,20 @@ public enum MATTInputType {
         return inputType;
     }
   
-    public static MATTInputType getMATTInputType(String inputType) {
+    public static InputType getInputType(String inputType) {
         // In case there were no input type provided, the default is
         // always returned: PROJECT.
         if (inputType == null) {
-            return MATTInputType.PROJECT;
+            return InputType.PROJECT;
         }
         
         try {
-            return MATTInputType.valueOf(inputType);
+            return InputType.valueOf(inputType);
         }
         catch (IllegalArgumentException e) {
             // The input type passed in was bad so we will
             // use the default type instead.
-            return MATTInputType.PROJECT;
+            return InputType.PROJECT;
         }
     }
 }

@@ -26,6 +26,8 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import com.soasta.jenkins.makeAppTouchTestable.InputType;
+
 /**
  * @author Kohsuke Kawaguchi
  */
@@ -39,7 +41,7 @@ public class MakeAppTouchTestable extends Builder {
      * @see CloudTestServer
      */
     private final String cloudTestServerID;
-    private final MATTInputType inputType;
+    private final InputType inputType;
     private final String inputFile;
     private final String target;
     private final String launchURL;
@@ -51,7 +53,7 @@ public class MakeAppTouchTestable extends Builder {
       String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
         this.url = url;
         this.cloudTestServerID = cloudTestServerID;
-        this.inputType = MATTInputType.getMATTInputType(inputType);
+        this.inputType = InputType.getInputType(inputType);
         this.inputFile = inputFile;
         this.target = target;
         this.launchURL = launchURL;
@@ -67,7 +69,7 @@ public class MakeAppTouchTestable extends Builder {
         return cloudTestServerID;
     }
     
-    public MATTInputType getInputType() {
+    public InputType getInputType() {
         return inputType;
     }
 
@@ -176,10 +178,9 @@ public class MakeAppTouchTestable extends Builder {
          */
         public ListBoxModel doFillInputTypeItems() {
             ListBoxModel items = new ListBoxModel();
-            items.add("Project", MATTInputType.PROJECT.toString());
-            items.add("IPA", MATTInputType.IPA.toString());
-            items.add("APP File", MATTInputType.APP.toString());
-//            items.add("APK", MATTInputType.APK.toString());
+            items.add("Project", InputType.PROJECT.toString());
+            items.add("IPA", InputType.IPA.toString());
+            items.add("APP File", InputType.APP.toString());
             return items;
         }
     }
