@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
+ * Copyright (c) 2012-2013, CloudBees, Inc.
  * Copyright (c) 2012-2014, SOASTA, Inc.
  * All Rights Reserved.
  */
@@ -163,11 +163,12 @@ public class MakeAppTouchTestable extends Builder {
         }
 
         /**
-         * Called automatically by Jenkins whenever the "inputFile"
-         * field is modified by the user.
+         * Called automatically by Jenkins whenever the "projectFile"
+         * field (known to the user as the input file, now) is modified by 
+         * the user.
          * @param value the new path.
          */
-        public FormValidation doCheckInputFile(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
+        public FormValidation doCheckProjectFile(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
                 return FormValidation.error("Input file is required.");
             } else {
