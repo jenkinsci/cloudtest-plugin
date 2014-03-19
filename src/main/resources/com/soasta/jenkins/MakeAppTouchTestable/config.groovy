@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2012, CloudBees, Inc.
- * Copyright (c) 2012-2013, SOASTA, Inc.
+ * Copyright (c) 2012-2014, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins.MakeAppTouchTestable;
@@ -13,7 +13,7 @@ f.entry(title:"CloudTest Server",field:"cloudTestServerID") {
 f.entry(title:"Input Type",field:"inputType") {
     f.select(name:"inputType")
 }
-f.entry(title:"Input File",field:"inputFile") {
+f.entry(title:"Input File",field:"projectFile") {
     f.textbox()
 }
 f.advanced {

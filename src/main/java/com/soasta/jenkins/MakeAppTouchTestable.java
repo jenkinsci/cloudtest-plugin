@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012-2014, CloudBees, Inc., SOASTA, Inc.
+ * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
+ * Copyright (c) 2012-2014, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -40,19 +41,25 @@ public class MakeAppTouchTestable extends Builder {
      */
     private final String cloudTestServerID;
     private final InputType inputType;
-    private final String inputFile;
+    /**
+     * The input file associated with inputType.
+     * In order to keep the backwards compatibility of the project file name
+     * from before inputType was added, we are not changing the projectFile to 
+     * inputFile.
+     */
+    private final String projectFile;
     private final String target;
     private final String launchURL;
     private final boolean backupModifiedFiles;
     private final String additionalOptions;
 
     @DataBoundConstructor
-    public MakeAppTouchTestable(String url, String cloudTestServerID, String inputType, String inputFile, 
+    public MakeAppTouchTestable(String url, String cloudTestServerID, String inputType, String projectFile, 
       String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
         this.url = url;
         this.cloudTestServerID = cloudTestServerID;
         this.inputType = InputType.getInputType(inputType);
-        this.inputFile = inputFile;
+        this.projectFile = projectFile;
         this.target = target;
         this.launchURL = launchURL;
         this.backupModifiedFiles = backupModifiedFiles;
@@ -70,9 +77,8 @@ public class MakeAppTouchTestable extends Builder {
     public InputType getInputType() {
         return inputType;
     }
-
-    public String getInputFile() {
-        return inputFile;
+    public String getProjectFile() {
+        return projectFile;
     }
 
     public String getTarget() {
@@ -108,7 +114,7 @@ public class MakeAppTouchTestable extends Builder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new MakeAppTouchTestable(url, s.getId(), inputType.getInputType(), inputFile, target, launchURL, backupModifiedFiles, additionalOptions);
+        return new MakeAppTouchTestable(url, s.getId(), inputType.getInputType(), projectFile, target, launchURL, backupModifiedFiles, additionalOptions);
     }
 
     @Override
@@ -134,7 +140,7 @@ public class MakeAppTouchTestable extends Builder {
             .add("-username",s.getUsername())
             .add("-password").addMasked(s.getPassword().getPlainText());
 
-        args.add(inputType.getInputType(), envs.expand(inputFile));
+        args.add(inputType.getInputType(), envs.expand(projectFile));
         
         if (target!=null && !target.trim().isEmpty())
             args.add("-target", envs.expand(target));
@@ -178,7 +184,7 @@ public class MakeAppTouchTestable extends Builder {
             ListBoxModel items = new ListBoxModel();
             items.add("Project", InputType.PROJECT.toString());
             items.add("IPA", InputType.IPA.toString());
-            items.add("APP Bundle", InputType.APP.toString());
+            items.add("iOS APP Bundle", InputType.APP.toString());
             return items;
         }
     }
