@@ -185,7 +185,7 @@ public class MakeAppTouchTestable extends Builder {
             // Because the Project is first, it's the default.
             items.add("Project", InputType.PROJECT.toString());
             items.add("IPA", InputType.IPA.toString());
-            items.add("iOS APP Bundle", InputType.APP.toString());
+            items.add("iOS App Bundle", InputType.APP.toString());
             return items;
         }
     }
