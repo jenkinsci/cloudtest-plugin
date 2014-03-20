@@ -170,20 +170,10 @@ public class MakeAppTouchTestable extends Builder {
         public FormValidation doCheckProjectFile(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
                 return FormValidation.error("Input file is required.");
+            } else {
+                // Make sure the directory exists.
+                return validateFileMask(project, value);
             }
-            
-            // Get rid of excess spaces.
-            value = value.trim();
-            // The following ensures that the value sent is always a directory.
-            if (value.endsWith(".ipa") || value.endsWith(".app") || 
-                value.endsWith(".apk")) {
-                // This is a file, strip out the file part of the directory.
-                int index = value.lastIndexOf('/');
-                value = value.substring(0, index);
-            }
-
-            // Make sure the directory exists.
-            return validateFileMask(project, value);
         }
         
         /**
