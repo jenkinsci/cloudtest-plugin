@@ -163,17 +163,27 @@ public class MakeAppTouchTestable extends Builder {
 
         /**
          * Called automatically by Jenkins whenever the "projectFile"
-         * field (known to the user as the input file, now) is modified by 
+         * field (known to the user as the input file) is modified by 
          * the user.
-         * @param value the new path.
+         * @param value of the new path.
          */
         public FormValidation doCheckProjectFile(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
                 return FormValidation.error("Input file is required.");
-            } else {
-                // Make sure the directory exists.
-                return validateFileMask(project, value);
             }
+            
+            // Get rid of excess spaces.
+            value = value.trim();
+            // The following ensures that the value sent is always a directory.
+            if (value.endsWith(".ipa") || value.endsWith(".app") || 
+                value.endsWith(".apk")) {
+                // This is a file, strip out the file part of the directory.
+                int index = value.lastIndexOf('/');
+                value = value.substring(0, index);
+            }
+
+            // Make sure the directory exists.
+            return validateFileMask(project, value);
         }
         
         /**
@@ -182,6 +192,7 @@ public class MakeAppTouchTestable extends Builder {
          */
         public ListBoxModel doFillInputTypeItems() {
             ListBoxModel items = new ListBoxModel();
+            // Because the Project is first, it's the default.
             items.add("Project", InputType.PROJECT.toString());
             items.add("IPA", InputType.IPA.toString());
             items.add("iOS APP Bundle", InputType.APP.toString());
@@ -201,25 +212,15 @@ public class MakeAppTouchTestable extends Builder {
           this.inputType = inputType;
       }
       
-      public String getInputType() {
+      private String getInputType() {
           return inputType;
       }
     
-      public static InputType getInputType(String inputType) {
-          // In case there were no input type provided, the default is
-          // always returned: PROJECT.
-          if (inputType == null) {
-              return InputType.PROJECT;
-          }
-          
-          try {
-              return InputType.valueOf(inputType);
-          }
-          catch (IllegalArgumentException e) {
-              // The input type passed in was bad so we will
-              // use the default type instead.
-              return InputType.PROJECT;
-          }
+      // The inputType should never be anything than the options
+      // listed in the doFillInputTypeItems() as it is a drop-down.
+      // The values given should always be valid.
+      private static InputType getInputType(String inputType) {
+          return InputType.valueOf(inputType);
       }
     }
     
