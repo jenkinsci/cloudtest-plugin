@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
+ * Copyright (c) 2012-2014, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -16,6 +16,7 @@ import hudson.model.JDK;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.util.QuotedStringTokenizer;
 
 import org.kohsuke.stapler.AncestorInPath;
@@ -38,15 +39,25 @@ public class MakeAppTouchTestable extends Builder {
      * @see CloudTestServer
      */
     private final String cloudTestServerID;
-    private final String projectFile,target;
+    private final InputType inputType;
+    /**
+     * The input file associated with inputType.
+     * In order to keep the backwards compatibility of the project file name
+     * from before inputType was added, we are not changing the projectFile to 
+     * inputFile.
+     */
+    private final String projectFile;
+    private final String target;
     private final String launchURL;
     private final boolean backupModifiedFiles;
     private final String additionalOptions;
 
     @DataBoundConstructor
-    public MakeAppTouchTestable(String url, String cloudTestServerID, String projectFile, String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
+    public MakeAppTouchTestable(String url, String cloudTestServerID, String inputType, String projectFile, 
+      String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
         this.url = url;
         this.cloudTestServerID = cloudTestServerID;
+        this.inputType = InputType.getInputType(inputType);
         this.projectFile = projectFile;
         this.target = target;
         this.launchURL = launchURL;
@@ -61,7 +72,10 @@ public class MakeAppTouchTestable extends Builder {
     public String getCloudTestServerID() {
         return cloudTestServerID;
     }
-
+    
+    public InputType getInputType() {
+        return inputType;
+    }
     public String getProjectFile() {
         return projectFile;
     }
@@ -99,7 +113,7 @@ public class MakeAppTouchTestable extends Builder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new MakeAppTouchTestable(url, s.getId(), projectFile, target, launchURL, backupModifiedFiles, additionalOptions);
+        return new MakeAppTouchTestable(url, s.getId(), inputType.getInputType(), projectFile, target, launchURL, backupModifiedFiles, additionalOptions);
     }
 
     @Override
@@ -121,11 +135,12 @@ public class MakeAppTouchTestable extends Builder {
 
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
-            .add("-project", envs.expand(projectFile))
             .add("-url").add(s.getUrl())
             .add("-username",s.getUsername())
             .add("-password").addMasked(s.getPassword().getPlainText());
 
+        args.add(inputType.getInputType(), envs.expand(projectFile));
+        
         if (target!=null && !target.trim().isEmpty())
             args.add("-target", envs.expand(target));
         if (launchURL!=null && !launchURL.trim().isEmpty())
@@ -148,18 +163,56 @@ public class MakeAppTouchTestable extends Builder {
 
         /**
          * Called automatically by Jenkins whenever the "projectFile"
-         * field is modified by the user.
-         * @param value the new path.
+         * field (known to the user as the input file) is modified by 
+         * the user.
+         * @param value of the new path.
          */
         public FormValidation doCheckProjectFile(@AncestorInPath AbstractProject project, @QueryParameter String value) throws IOException {
             if (value == null || value.trim().isEmpty()) {
-                return FormValidation.error("Project directory is required.");
+                return FormValidation.error("Input file is required.");
             } else {
                 // Make sure the directory exists.
                 return validateFileMask(project, value);
             }
         }
+        
+        /**
+         * Called automatically by Jenkins to fill the drop-down "inputType".
+         * @return items the values of "inputType".
+         */
+        public ListBoxModel doFillInputTypeItems() {
+            ListBoxModel items = new ListBoxModel();
+            // Because the Project is first, it's the default.
+            items.add("Project", InputType.PROJECT.toString());
+            items.add("IPA", InputType.IPA.toString());
+            items.add("iOS App Bundle", InputType.APP.toString());
+            return items;
+        }
     }
 
+    static enum InputType {
+      
+      APP ("-appbundle"),
+      IPA ("-ipa"),
+      PROJECT ("-project");
+    
+      String inputType;
+    
+      private InputType(String inputType) {
+          this.inputType = inputType;
+      }
+      
+      private String getInputType() {
+          return inputType;
+      }
+    
+      // The inputType should never be anything than the options
+      // listed in the doFillInputTypeItems() as it is a drop-down.
+      // The values given should always be valid.
+      private static InputType getInputType(String inputType) {
+          return InputType.valueOf(inputType);
+      }
+    }
+    
     private static final Logger LOGGER = Logger.getLogger(MakeAppTouchTestable.class.getName());
 }
