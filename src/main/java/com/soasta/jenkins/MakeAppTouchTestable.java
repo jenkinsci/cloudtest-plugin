@@ -145,10 +145,7 @@ public class MakeAppTouchTestable extends Builder {
 
         args.add(DEFAULT_JAVA_OPTION);
         // Add the options without the "" around the arguments
-        String[] opts = javaOptions == null ? null : new QuotedStringTokenizer(javaOptions).toArray();
-        if (opts != null) {
-            args.add(opts);
-        }
+        args.add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray());
             
         
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
