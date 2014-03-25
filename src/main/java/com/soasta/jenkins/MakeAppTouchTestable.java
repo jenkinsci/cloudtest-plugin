@@ -142,7 +142,11 @@ public class MakeAppTouchTestable extends Builder {
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
         
         if (additionalJVMOptions != null && additionalJVMOptions.trim().length() > 0) {
-          args.add(additionalJVMOptions);
+            args.add(additionalJVMOptions);
+        }
+        else {
+            // set the default
+            args.add("-Xmx1024");
         }
         
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
