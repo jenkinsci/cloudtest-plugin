@@ -53,6 +53,8 @@ public class MakeAppTouchTestable extends Builder {
     private final String additionalOptions;
     private final String additionalJVMOptions;
 
+    private final String DEFAULT_JVM_OPTION = "-Xmx1024m";
+    
     @DataBoundConstructor
     public MakeAppTouchTestable(String url, String cloudTestServerID, String inputType, String projectFile, 
       String target, String launchURL, boolean backupModifiedFiles, String additionalOptions, 
@@ -142,11 +144,11 @@ public class MakeAppTouchTestable extends Builder {
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
         
         if (additionalJVMOptions != null && additionalJVMOptions.trim().length() > 0) {
-            args.add(additionalJVMOptions);
+            args.add(DEFAULT_JVM_OPTION + " " + additionalJVMOptions);
         }
         else {
             // set the default
-            args.add("-Xmx1024m");
+            args.add(DEFAULT_JVM_OPTION);
         }
         
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
