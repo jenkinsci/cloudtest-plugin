@@ -144,13 +144,12 @@ public class MakeAppTouchTestable extends Builder {
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
 
         args.add(DEFAULT_JAVA_OPTION);
-        if (javaOptions != null && javaOptions.trim().length() > 0) {
-            // Add the options without the "" around the arguments
-            String[] opts = javaOptions.split(" ");
-            for(String opt : opts) {
-                args.add(opt);
-            }
+        // Add the options without the "" around the arguments
+        String[] opts = javaOptions == null ? null : new QuotedStringTokenizer(javaOptions).toArray();
+        if (opts != null) {
+            args.add(opts);
         }
+            
         
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
