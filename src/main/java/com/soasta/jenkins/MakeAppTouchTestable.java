@@ -51,14 +51,14 @@ public class MakeAppTouchTestable extends Builder {
     private final String launchURL;
     private final boolean backupModifiedFiles;
     private final String additionalOptions;
-    private final String additionalJVMOptions;
+    private final String javaOptions;
 
-    private final String DEFAULT_JVM_OPTION = "-Xmx1024m";
+    private final String DEFAULT_JAVA_OPTION = "-Xmx1024m";
     
     @DataBoundConstructor
     public MakeAppTouchTestable(String url, String cloudTestServerID, String inputType, String projectFile, 
       String target, String launchURL, boolean backupModifiedFiles, String additionalOptions, 
-      String additionalJVMOptions) {
+      String javaOptions) {
         this.url = url;
         this.cloudTestServerID = cloudTestServerID;
         this.inputType = InputType.getInputType(inputType);
@@ -67,7 +67,7 @@ public class MakeAppTouchTestable extends Builder {
         this.launchURL = launchURL;
         this.backupModifiedFiles = backupModifiedFiles;
         this.additionalOptions = additionalOptions;
-        this.additionalJVMOptions = additionalJVMOptions;
+        this.javaOptions = javaOptions;
     }
 
     public String getUrl() {
@@ -101,8 +101,8 @@ public class MakeAppTouchTestable extends Builder {
         return additionalOptions;
     }
     
-    public String getAdditionalJVMOptions() {
-        return additionalJVMOptions;
+    public String getJavaOptions() {
+        return javaOptions;
     }
 
     public CloudTestServer getServer() {
@@ -123,7 +123,7 @@ public class MakeAppTouchTestable extends Builder {
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
         return new MakeAppTouchTestable(url, s.getId(), inputType.getInputType(), projectFile, 
-            target, launchURL, backupModifiedFiles, additionalOptions, additionalJVMOptions);
+            target, launchURL, backupModifiedFiles, additionalOptions, javaOptions);
     }
 
     @Override
@@ -142,13 +142,14 @@ public class MakeAppTouchTestable extends Builder {
         EnvVars envs = build.getEnvironment(listener);
 
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
-        
-        if (additionalJVMOptions != null && additionalJVMOptions.trim().length() > 0) {
-            args.add(DEFAULT_JVM_OPTION + " " + additionalJVMOptions);
-        }
-        else {
-            // set the default
-            args.add(DEFAULT_JVM_OPTION);
+
+        args.add(DEFAULT_JAVA_OPTION);
+        if (javaOptions != null && javaOptions.trim().length() > 0) {
+            // Add the options without the "" around the arguments
+            String[] opts = javaOptions.split(" ");
+            for(String opt : opts) {
+                args.add(opt);
+            }
         }
         
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
