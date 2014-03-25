@@ -146,7 +146,7 @@ public class MakeAppTouchTestable extends Builder {
         }
         else {
             // set the default
-            args.add("-Xmx1024");
+            args.add("-Xmx1024m");
         }
         
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
