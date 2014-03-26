@@ -145,8 +145,7 @@ public class MakeAppTouchTestable extends Builder {
 
         args.add(DEFAULT_JAVA_OPTION);
         args.add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray());
-            
-        
+
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
             .add("-url").add(s.getUrl())
