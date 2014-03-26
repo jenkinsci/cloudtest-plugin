@@ -51,10 +51,14 @@ public class MakeAppTouchTestable extends Builder {
     private final String launchURL;
     private final boolean backupModifiedFiles;
     private final String additionalOptions;
+    private final String javaOptions;
 
+    private final String DEFAULT_JAVA_OPTION = "-Xmx1024m";
+    
     @DataBoundConstructor
     public MakeAppTouchTestable(String url, String cloudTestServerID, String inputType, String projectFile, 
-      String target, String launchURL, boolean backupModifiedFiles, String additionalOptions) {
+      String target, String launchURL, boolean backupModifiedFiles, String additionalOptions, 
+      String javaOptions) {
         this.url = url;
         this.cloudTestServerID = cloudTestServerID;
         this.inputType = InputType.getInputType(inputType);
@@ -63,6 +67,7 @@ public class MakeAppTouchTestable extends Builder {
         this.launchURL = launchURL;
         this.backupModifiedFiles = backupModifiedFiles;
         this.additionalOptions = additionalOptions;
+        this.javaOptions = javaOptions;
     }
 
     public String getUrl() {
@@ -95,6 +100,10 @@ public class MakeAppTouchTestable extends Builder {
     public String getAdditionalOptions() {
         return additionalOptions;
     }
+    
+    public String getJavaOptions() {
+        return javaOptions;
+    }
 
     public CloudTestServer getServer() {
         return CloudTestServer.getByID(cloudTestServerID);
@@ -113,7 +122,8 @@ public class MakeAppTouchTestable extends Builder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new MakeAppTouchTestable(url, s.getId(), inputType.getInputType(), projectFile, target, launchURL, backupModifiedFiles, additionalOptions);
+        return new MakeAppTouchTestable(url, s.getId(), inputType.getInputType(), projectFile, 
+            target, launchURL, backupModifiedFiles, additionalOptions, javaOptions);
     }
 
     @Override
@@ -132,6 +142,9 @@ public class MakeAppTouchTestable extends Builder {
         EnvVars envs = build.getEnvironment(listener);
 
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
+
+        args.add(DEFAULT_JAVA_OPTION);
+        args.add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray());
 
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
@@ -184,6 +197,7 @@ public class MakeAppTouchTestable extends Builder {
             ListBoxModel items = new ListBoxModel();
             // Because the Project is first, it's the default.
             items.add("Project", InputType.PROJECT.toString());
+            items.add("APK", InputType.APK.toString());
             items.add("IPA", InputType.IPA.toString());
             items.add("iOS App Bundle", InputType.APP.toString());
             return items;
@@ -191,7 +205,7 @@ public class MakeAppTouchTestable extends Builder {
     }
 
     static enum InputType {
-      
+      APK ("-apk"),
       APP ("-appbundle"),
       IPA ("-ipa"),
       PROJECT ("-project");

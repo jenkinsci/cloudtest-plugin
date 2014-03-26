@@ -28,4 +28,7 @@ f.advanced {
     f.entry(title:"Additional Options",field:"additionalOptions") {
         f.expandableTextbox()
     }
+    f.entry(title:"Java Options",field:"javaOptions") {
+        f.expandableTextbox()
+    }
 }
