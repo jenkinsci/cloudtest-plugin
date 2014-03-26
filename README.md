@@ -21,7 +21,7 @@ The CloudTest password is encrypted before saving it to disk.  It is also masked
 The plug-in adds the following new build steps:
 
 ##### Make App TouchTestable
-Adds the TouchTest Driver library to your app's source code or to your iOS ipa/app file.  For adding the TouchTest Driver library to the source, typically this build step is inserted right before the build step that compiles the app's code (e.g. before the Xcode build step for iOS, or before the "Invoke Ant" build step for Android).  If you are using an ipa or app file instead, an TouchTestable ipa will be created.  You must provide the necessary provisioning profile and signing key so the resulting ipa can be properly installed onto an Apple device.
+Adds the TouchTest Driver library to your app's source code or to your iOS ipa, app, or apk file.  For adding the TouchTest Driver library to the source, typically this build step is inserted right before the build step that compiles the app's code (e.g. before the Xcode build step for iOS, or before the "Invoke Ant" build step for Android).  If you are using an ipa or app file instead, an TouchTestable ipa will be created.  If you are using an apk file, an apk file will be created and returned.  You must provide the necessary provisioning profile and signing key so the resulting ipa can be properly installed onto an Apple device.
 
 ##### Install iOS App on Device
 Silently installs an IPA file on one or more attached iOS devices.  This ensures that your tests run against the latest version of your app.  _NOTE: there is no Android version of this build step, because the Android SDK already provides this functionality ("adb install")._
