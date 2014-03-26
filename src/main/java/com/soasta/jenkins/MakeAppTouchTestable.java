@@ -144,7 +144,6 @@ public class MakeAppTouchTestable extends Builder {
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
 
         args.add(DEFAULT_JAVA_OPTION);
-        // Add the options without the "" around the arguments
         args.add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray());
             
         
