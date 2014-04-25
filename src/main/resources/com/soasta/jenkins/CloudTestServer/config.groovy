@@ -25,6 +25,6 @@ f.validateButton(method:"validate",with:"url,username,password,id,name",title:"T
 f.entry {
     div(align:"right") {
         input(type:"button",value:"Add",class:"repeatable-add")
-        input(type:"button",value:"Delete",class:"repeatable-delete show-if-not-last")
+        input(type:"button",value:"Delete",class:"repeatable-delete")
     }
 }
