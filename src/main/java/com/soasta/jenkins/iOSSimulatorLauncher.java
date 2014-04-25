@@ -97,7 +97,7 @@ public class iOSSimulatorLauncher extends Builder {
         // The simulator will automatically open this URL
         // in Mobile Safari.
         String agentURL;
-        String cloudTestServerUrl = server.getUrl().toString();
+        String cloudTestServerUrl = server.getUrl();
         
         if (cloudTestServerUrl.endsWith("/"))
             agentURL = cloudTestServerUrl + "touchtest";

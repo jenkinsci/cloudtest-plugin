@@ -54,7 +54,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     /**
      * URL like "http://touchtestlite.soasta.com/concerto/"
      */
-    private final URL url;
+    private final String url;
 
     private final String username;
     private final Secret password;
@@ -66,12 +66,18 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
     @DataBoundConstructor
     public CloudTestServer(String url, String username, Secret password, String id, String name) throws MalformedURLException {
-        // normalization
-        // TODO: can the service be running outside the /concerto/ URL?
-        if (!url.endsWith("/")) url+='/';
-        if (!url.endsWith("/concerto/"))
-            url+="concerto/";
-        this.url = new URL(url);
+        if (url == null || url.isEmpty()) {
+            // This is not really a valid case, but we have to store something.
+            this.url = null;
+        }
+        else {
+            // normalization
+            // TODO: can the service be running outside the /concerto/ URL?
+            if (!url.endsWith("/")) url+='/';
+            if (!url.endsWith("/concerto/"))
+                url+="concerto/";
+            this.url = url;
+        }
 
         this.username = username;
         this.password = password;
@@ -105,7 +111,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         }
     }
 
-    public URL getUrl() {
+    public String getUrl() {
         return url;
     }
 
@@ -144,13 +150,13 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         // and write the auto-generated values to disk, so this logic
         // should only execute once.  See DescriptorImpl constructor.
         LOGGER.info("Re-creating object to generate a new server ID and name.");
-        return new CloudTestServer(url.toExternalForm(), username, password, id, name);
+        return new CloudTestServer(url, username, password, id, name);
     }
 
     public FormValidation validate() throws IOException {
         HttpClient hc = createClient();
 
-        PostMethod post = new PostMethod(new URL(getUrl(),"Login").toExternalForm());
+        PostMethod post = new PostMethod(url + "Login");
         post.addParameter("userName",getUsername());
         post.addParameter("password",getPassword().getPlainText());
 
@@ -173,11 +179,17 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
      * Postcondition: The build number returned is never null.
      */
     public VersionNumber getBuildNumber() throws IOException {
+        if (url == null) {
+            // User didn't enter a value in the Configure Jenkins page.
+            // Nothing we can do.
+            throw new IllegalStateException("No URL has been configured for this CloudTest server.");
+        }
+
         final String[] v = new String[1];
         try {
             HttpClient hc = createClient();
             
-            GetMethod get = new GetMethod(url.toExternalForm());
+            GetMethod get = new GetMethod(url);
             hc.executeMethod(get);
             
             if (get.getStatusCode() != 200) {
@@ -237,7 +249,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     public static CloudTestServer getByURL(String url) {
         List<CloudTestServer> servers = Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class).getServers();
         for (CloudTestServer s : servers) {
-            if (s.getUrl().toExternalForm().equals(url))
+            if (s.getUrl().equals(url))
                 return s;
         }
         // if we can't find any, fall back to the default one
@@ -307,6 +319,50 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         public FormValidation doValidate(@QueryParameter String url, @QueryParameter String username, @QueryParameter String password, @QueryParameter String id, @QueryParameter String name) throws IOException {
             return new CloudTestServer(url,username,Secret.fromString(password), id, name).validate();
+        }
+
+        public FormValidation doCheckName(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("Required.");
+            } else {
+                return FormValidation.ok();
+            }
+        }
+
+        public FormValidation doCheckUrl(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("Required.");
+            } else if (!isValidURL(value)) {
+                return FormValidation.error("Invalid URL syntax (did you mean http://" + value + " ?");
+            } else {
+                return FormValidation.ok();
+            }
+        }
+
+        public FormValidation doCheckUsername(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("Required.");
+            } else {
+                return FormValidation.ok();
+            }
+        }
+
+        public FormValidation doCheckPassword(@QueryParameter String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return FormValidation.error("Required.");
+            } else {
+                return FormValidation.ok();
+            }
+        }
+
+        private static boolean isValidURL(String url) {
+            try {
+                new URL(url);
+                return true;
+            }
+            catch (MalformedURLException e) {
+                return false;
+            }
         }
     }
 
