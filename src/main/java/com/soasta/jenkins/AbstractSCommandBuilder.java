@@ -5,6 +5,7 @@
 package com.soasta.jenkins;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
@@ -64,7 +65,7 @@ public abstract class AbstractSCommandBuilder extends Builder {
           // Jenkins is configured to use a proxy server.
 
           // Extract the destination CloudTest host.
-          String host = s.getUrl().getHost();
+          String host = new URL(s.getUrl()).getHost();
 
           // Check if the proxy applies for this destination host.
           // This code is more or less copied from ProxyConfiguration.createProxy() :-(.

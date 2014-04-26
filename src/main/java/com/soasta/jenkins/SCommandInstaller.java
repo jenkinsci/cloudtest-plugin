@@ -26,7 +26,7 @@ public class SCommandInstaller extends CommonInstaller {
     @Override
     public Installable getInstallable() throws IOException {
         Installable i = new Installable();
-        i.url = new URL(getServer().getUrl(), getInstallerType().getInstallerDownloadPath()).toExternalForm();
+        i.url = getServer().getUrl() + getInstallerType().getInstallerDownloadPath();
         i.id = id;
         i.name = getBuildNumber().toString();
         return i;
