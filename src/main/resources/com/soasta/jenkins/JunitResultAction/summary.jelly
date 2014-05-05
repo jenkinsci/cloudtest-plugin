@@ -35,63 +35,57 @@
         <j:otherwise>
 
             <j:if test="${it.ResultID.length()>0}">
-                <!-- <tr><td> -->
                 <p>
-
-                  <j:choose>
+                <j:choose>
                   
-                  	<!-- When there are error messages passed, output that message
-                  		 with an error icon and the error message in red. -->
-                    <j:when test="${!empty(it.getErrorMessages())}">
-                      <j:forEach var="errorMessage" items="${it.getErrorMessages()}">
-                        <div style="color: red"><img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${errorMessage}</div>
-                      </j:forEach>
-                    </j:when>
+                	<!-- When there are error messages passed, output that message
+                		 with an error icon and the error message in red. -->
+                  <j:when test="${!empty(it.getErrorMessages())}">
+                    <j:forEach var="errorMessage" items="${it.getErrorMessages()}">
+                      <div style="color: red"><img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${errorMessage}</div>
+                    </j:forEach>
+                  </j:when>
 
-					          <!-- If there are validation messages, iterate through all the messages 
-						          output them. -->
-                    <j:when test="${!empty(it.getMessages())}">
-                      <!-- <table style="width:100%"> -->
-	                      <j:forEach var="message" items="${it.getMessages()}">
+				          <!-- If there are validation messages, iterate through all the messages 
+					          output them. -->
+                  <j:when test="${!empty(it.getMessages())}">
+                    
+                    <j:forEach var="message" items="${it.getMessages()}">
+                    
+				              <j:set var="clipName" value="${message.getClipName()}" />
+				              
+				              <!-- Output the clip name if it exists. -->
+          						<j:if test="${!empty(clipName)}">
+    								    <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
+    							    </j:if>
+          									
+    							    <!-- Output the validation message in red if it failed and in green 
+    								    if it succeeded, with the appropriate icons indicating failure
+    								    or success. -->
+	                    <j:choose>
 	                    
-						              <!-- <tr> -->
-						                <!-- Only output the clip name if it exists. -->
-              							<j:set var="clipName" value="${message.getClipName()}" />
-              							
-              							  <!-- <td style="width:1px;white-space:nowrap;overflow:hidden;"> -->
-              								  <j:if test="${!empty(clipName)}">
-              								    <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
-              							    </j:if>
-              							  <!-- </td> -->
-              									
-              							  <!-- Output the validation message in red if it failed and in green 
-              								   if it succeeded, with the appropriate icons indicating failure
-              								   or success. -->
-              							  <!-- <td> -->
-      			                    <j:choose>
-      			                      <j:when test="${message.getType() == 'validation-pass'}">
-      			                        <div style="display:inline; color: green"> <img src="${rootURL}/plugin/cloudtest/icon16_success.png" /> ${message.getContent()}</div>
-      			                      </j:when>
-      			                      <j:otherwise>
-      			                        <div style="display:inline; color: red"> <img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${message.getContent()}</div>
-      			                      </j:otherwise>
-      			                    </j:choose>
-    		                      <!-- </td> -->
-    		                      <br/>
-    		                    <j:remove var="clipName" />  
-						             <!-- </tr> -->
-	                      </j:forEach>
-                      <!-- </table> -->
-                    </j:when>
+	                      <j:when test="${message.getType() == 'validation-pass'}">
+	                        <div style="display:inline; color: green"> <img src="${rootURL}/plugin/cloudtest/icon16_success.png" /> ${message.getContent()}</div>
+	                      </j:when>
+	                      
+	                      <j:otherwise>
+	                        <div style="display:inline; color: red"> <img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${message.getContent()}</div>
+	                      </j:otherwise>
+	                    
+	                    </j:choose>
+	                    
+                      <br/>
+                      <j:remove var="clipName" />
+                      
+                    </j:forEach>
+                  </j:when>
 
-                    <j:otherwise>
-                      No validation messages to show.
-                    </j:otherwise>
+                  <j:otherwise>
+                    No validation messages to show.
+                  </j:otherwise>
 
-                  </j:choose>
+                </j:choose>
                   </p>
-                <!-- </td></tr>
-                <tr><td colspan="2"> -->
                 
                                             <a id="aid" href="#" onClick="myshow()">Click here to see the SOASTA CloudTest dashboard for this test</a>
                                             <br/>
@@ -99,7 +93,6 @@
                                             
 							              <!-- Allow the viewer to directly see the result in the iframe provided below -->
                             <iframe id="ifr" src="${it.Url}/Central?initResultsTab=${it.ResultID}" style="display:none" width="100%" height="1000"></iframe>
-                <!-- </td></tr> -->
             </j:if>
             
         </j:otherwise>
