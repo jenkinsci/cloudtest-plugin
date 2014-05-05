@@ -129,6 +129,7 @@ public class JunitResultPublisher extends TestDataPublisher
             {
               // Initialize the values that will be taken out
               String type = null;      // The type of message (i.e. "validation-pass").
+              String clipName = null;  // The name of the clip the message is from.
               String message = null;   // The result message itself.
               Message resultsMessage = null;    // The message object that will be created from the strings: type and message.
               for (int i = 0; i < messageNodes.getLength(); i++)
@@ -139,8 +140,11 @@ public class JunitResultPublisher extends TestDataPublisher
                 // attributes.
                 type = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem("type") != null ?
                   messageNodes.item(i).getAttributes().getNamedItem("type").getTextContent() : null;
+                clipName = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem("clipName") != null ?
+                  messageNodes.item(i).getAttributes().getNamedItem("clipName").getTextContent() : null;
                 message = messageNodes.item(i).getTextContent();
-                resultsMessage = new Message(type, message);
+                
+                resultsMessage = new Message(type, clipName, message);
                 // Add it to the list.  It is assumed that the messages being parsed
                 // are already in chronological order.
                 messages.add(resultsMessage);
