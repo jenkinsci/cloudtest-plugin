@@ -47,7 +47,7 @@
                   </j:when>
 
 				          <!-- If there are validation messages, iterate through all the messages 
-					          output them. -->
+					          and output them. -->
                   <j:when test="${!empty(it.getMessages())}">
                     
                     <j:forEach var="message" items="${it.getMessages()}">
