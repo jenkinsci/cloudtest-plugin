@@ -53,29 +53,29 @@
                     <j:forEach var="message" items="${it.getMessages()}">
                     
                       <div style="padding-bottom: 3px">
-				              <j:set var="clipName" value="${message.getClipName()}" />
+                      <j:set var="clipName" value="${message.getClipName()}" />
 				              
                       <!-- Output the clip name if it exists. -->
-          						<j:if test="${!empty(clipName)}">
-    								    <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
-    							    </j:if>
+                      <j:if test="${!empty(clipName)}">
+                        <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
+                      </j:if>
           									
                       <!-- Output the validation message in red if it failed and in green 
                         if it succeeded, with the appropriate icons indicating failure
                         or success. -->
-	                    <j:choose>
+                      <j:choose>
 	                    
-	                      <j:when test="${message.getType() == 'validation-pass'}">
-	                        <div style="display:inline; color: green"> <img src="${rootURL}/plugin/cloudtest/icon16_success.png" /> ${message.getContent()}</div>
-	                      </j:when>
+                        <j:when test="${message.getType() == 'validation-pass'}">
+                          <div style="display:inline; color: green"> <img src="${rootURL}/plugin/cloudtest/icon16_success.png" /> ${message.getContent()}</div>
+                        </j:when>
 	                      
-	                      <j:otherwise>
-	                        <div style="display:inline; color: red"> <img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${message.getContent()}</div>
-	                      </j:otherwise>
+                        <j:otherwise>
+                          <div style="display:inline; color: red"> <img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${message.getContent()}</div>
+                        </j:otherwise>
 	                    
-	                    </j:choose>
+                        </j:choose>
 	                    
-	                    </div>
+                      </div>
                       <j:remove var="clipName" />
                       
                     </j:forEach>
