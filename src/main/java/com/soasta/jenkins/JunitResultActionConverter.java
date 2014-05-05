@@ -69,7 +69,7 @@ public class JunitResultActionConverter implements Converter
       for (String error : resultAction.getErrorMessages())
       {
         writer.startNode("message");
-        context.convertAnother(new Message(null, error));
+        context.convertAnother(new Message(null, null, error));
         writer.endNode();
       }
     }
