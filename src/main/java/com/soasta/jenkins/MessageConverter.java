@@ -39,6 +39,10 @@ public class MessageConverter implements Converter
     writer.setValue(message.getType());
     writer.endNode();
 
+    writer.startNode("messageClipName");
+    writer.setValue(message.getClipName());
+    writer.endNode();
+    
     writer.startNode("messageContent");
     writer.setValue(message.getContent());
     writer.endNode();
@@ -59,6 +63,10 @@ public class MessageConverter implements Converter
       if ("messageType".equals(nodeName))
       {
         message.setType(reader.getValue());
+      }
+      else if ("messageClipName".equals(nodeName))
+      {
+        message.setClipName(reader.getValue());
       }
       else if ("messageContent".equals(nodeName))
       {
