@@ -46,8 +46,8 @@
                     </j:forEach>
                   </j:when>
 
-				          <!-- If there are validation messages, iterate through all the messages 
-					          and output them. -->
+                  <!-- If there are validation messages, iterate through all the messages 
+                    and output them. -->
                   <j:when test="${!empty(it.getMessages())}">
                     
                     <j:forEach var="message" items="${it.getMessages()}">
@@ -55,14 +55,14 @@
                       <div style="padding-bottom: 3px">
 				              <j:set var="clipName" value="${message.getClipName()}" />
 				              
-				              <!-- Output the clip name if it exists. -->
+                      <!-- Output the clip name if it exists. -->
           						<j:if test="${!empty(clipName)}">
     								    <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
     							    </j:if>
           									
-    							    <!-- Output the validation message in red if it failed and in green 
-    								    if it succeeded, with the appropriate icons indicating failure
-    								    or success. -->
+                      <!-- Output the validation message in red if it failed and in green 
+                        if it succeeded, with the appropriate icons indicating failure
+                        or success. -->
 	                    <j:choose>
 	                    
 	                      <j:when test="${message.getType() == 'validation-pass'}">
