@@ -52,6 +52,7 @@
                     
                     <j:forEach var="message" items="${it.getMessages()}">
                     
+                      <div style="padding-bottom: 3px">
 				              <j:set var="clipName" value="${message.getClipName()}" />
 				              
 				              <!-- Output the clip name if it exists. -->
@@ -74,7 +75,7 @@
 	                    
 	                    </j:choose>
 	                    
-                      <br/>
+	                    </div>
                       <j:remove var="clipName" />
                       
                     </j:forEach>
