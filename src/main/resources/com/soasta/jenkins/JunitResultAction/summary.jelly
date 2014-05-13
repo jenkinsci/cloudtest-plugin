@@ -66,7 +66,7 @@
 				              
                       <!-- Output the clip name if it exists. -->
                       <j:if test="${!empty(clipName)}">
-                          <div><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
+                          <div><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName}</div>
                       </j:if>
                         
                       <div style="display:inline; padding-left:3em"></div>
