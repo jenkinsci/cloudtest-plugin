@@ -82,7 +82,7 @@
                         </j:otherwise>
 	                    
                       </j:choose>
-	                    </div>
+                      </div>
 	                    
                       <j:remove var="clipName" />
                       
