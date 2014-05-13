@@ -55,14 +55,14 @@
                     
                       <div style="padding-bottom: 3px">
                       <j:set var="clipName" value="${message.getClipName()}" />
-				              <j:choose>
-				                <j:when test="${empty(prevClipName) || prevClipName != clipName}">
-				                  <j:set var="prevClipName" value="${clipName}" />
-				                </j:when>
-				                <j:otherwise>
-				                  <j:set var="clipName" value="${null}" />
-				                </j:otherwise>
-				              </j:choose>
+                      <j:choose>
+                        <j:when test="${empty(prevClipName) || prevClipName != clipName}">
+                          <j:set var="prevClipName" value="${clipName}" />
+                        </j:when>
+                        <j:otherwise>
+                          <j:set var="clipName" value="${null}" />
+                        </j:otherwise>
+                      </j:choose>
 				              
                       <!-- Output the clip name if it exists. -->
                       <j:choose>
