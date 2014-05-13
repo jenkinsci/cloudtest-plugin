@@ -53,7 +53,7 @@
                     <j:set var="prevClipName" value="${null}" />
                     <j:forEach var="message" items="${it.getMessages()}">
                     
-                      <div style="padding-bottom: 3px">
+                      <div style="line-height: 20px">
                       <j:set var="clipName" value="${message.getClipName()}" />
                       <j:choose>
                         <j:when test="${empty(prevClipName) || prevClipName != clipName}">
@@ -65,17 +65,11 @@
                       </j:choose>
 				              
                       <!-- Output the clip name if it exists. -->
-                      <j:choose>
-                      
-                        <j:when test="${!empty(clipName)}">
-                          <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
-                        </j:when>
+                      <j:if test="${!empty(clipName)}">
+                          <div><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName} : </div>
+                      </j:if>
                         
-                        <j:otherwise>
-                          <div style="display:inline; padding-left:3em"></div>
-                        </j:otherwise>
-                      
-                      </j:choose>
+                      <div style="display:inline; padding-left:3em"></div>
           						
                       <!-- Output the validation message in red if it failed and in green 
                         if it succeeded, with the appropriate icons indicating failure
