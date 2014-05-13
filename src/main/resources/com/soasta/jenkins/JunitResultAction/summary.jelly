@@ -49,11 +49,20 @@
                   <!-- If there are validation messages, iterate through all the messages 
                     and output them. -->
                   <j:when test="${!empty(it.getMessages())}">
-                    
+                  
+                    <j:set var="prevClipName" value="${null}" />
                     <j:forEach var="message" items="${it.getMessages()}">
                     
                       <div style="padding-bottom: 3px">
                       <j:set var="clipName" value="${message.getClipName()}" />
+				              <j:choose>
+				                <j:when test="${empty(prevClipName) || prevClipName != clipName}">
+				                  <j:set var="prevClipName" value="${clipName}" />
+				                </j:when>
+				                <j:otherwise>
+				                  <j:set var="clipName" value="${null}" />
+				                </j:otherwise>
+				              </j:choose>
 				              
                       <!-- Output the clip name if it exists. -->
                       <j:choose>
@@ -63,7 +72,7 @@
                         </j:when>
                         
                         <j:otherwise>
-                          <div style="display:inline; padding-left:5em"></div>
+                          <div style="display:inline; padding-left:3em"></div>
                         </j:otherwise>
                       
                       </j:choose>
@@ -87,6 +96,7 @@
                       <j:remove var="clipName" />
                       
                     </j:forEach>
+                    <j:remove var="prevClipName" />
                   </j:when>
 
                   <j:otherwise>
