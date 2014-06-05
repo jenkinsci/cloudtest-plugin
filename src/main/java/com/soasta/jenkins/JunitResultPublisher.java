@@ -75,6 +75,12 @@ public class JunitResultPublisher extends TestDataPublisher
       // Get the local path of the JUnit XML file (may be on a slave node).
       String fileName = sr.getFile();
 
+      if (fileName == null || fileName.length() <= 0)
+      {
+        listener.error("The selected JUnit XML file does not exist.  Skipping.");
+        continue;
+      }
+      
       // Get local path of the build's workspace.
       String workspacePath = build.getWorkspace().getRemote();
 
