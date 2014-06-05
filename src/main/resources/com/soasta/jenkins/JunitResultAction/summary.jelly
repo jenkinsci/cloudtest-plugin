@@ -71,8 +71,19 @@
                                             <br/>
                                             <br/>
 
+                        <j:choose>
+                          <j:when test="${it.Url}">
                             <iframe id="ifr" src="${it.Url}/Central?initResultsTab=${it.ResultID}" style="display:none" width="100%" height="1000"></iframe>
-
+                          </j:when>
+                          
+                          <j:otherwise>
+                            The CloudTest dashboard may not load properly, because the CloudTest URL uses HTTPS and the Jenkins URL uses HTTP. You can correct this by either:
+                            <br/>
+                            <lu>browsing to Jenkins via HTTPS (if available)</lu>
+                            <br/>
+                            <lu>changing the CloudTest URL in the Jenkins configuration to use HTTP instead of HTTPS</lu>
+                          </j:otherwise>
+                        </j:choose>
             </j:if>
             
         </j:otherwise>
