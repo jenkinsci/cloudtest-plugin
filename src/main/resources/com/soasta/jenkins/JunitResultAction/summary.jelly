@@ -53,19 +53,21 @@
                     and output them. -->
                   <j:when test="${!empty(it.getMessages())}">
                   
-                    <j:set var="prevClipName" value="${null}" />
+                    <j:set var="prevClipPath" value="${null}" />
                     
                     <j:forEach var="message" items="${it.getMessages()}">
                     
                       <div style="line-height: 20px">
+                      
+                      <j:set var="outputClipPath" value="${false}" />
+                      <j:set var="clipMessageTabs" value="${1}" />
+                      
                       <j:set var="clipPath" value="${message.getClipName()}" />
                       <j:set var="clipMessage" value="${message.getContent()}" />
-                      <j:set var="clipMessageTabs" value="${1}" />
-                      <j:set var="outputClipPath" value="${false}" />
                       
                       <!-- Check if the clip path should be output -->
-                      <j:if test="${empty(prevClipName) || prevClipName != clipPath}">
-                          <j:set var="prevClipName" value="${clipPath}" />
+                      <j:if test="${empty(prevClipPath) || prevClipPath != clipPath}">
+                          <j:set var="prevClipPath" value="${clipPath}" />
                           <j:set var="outputClipPath" value="${true}" />   
                       </j:if>
                       
@@ -116,7 +118,7 @@
                       <j:remove var="clipPath" />
                       
                     </j:forEach>
-                    <j:remove var="prevClipName" />
+                    <j:remove var="prevClipPath" />
                   </j:when>
 
                   <j:otherwise>
