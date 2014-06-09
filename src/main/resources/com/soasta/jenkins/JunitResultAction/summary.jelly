@@ -21,7 +21,7 @@
 		
    	</script>
    	
-   	<!-- Escaping HTML to prevent cross-site scripting vulnerabilities. -->
+    <!-- Escaping HTML to prevent cross-site scripting vulnerabilities. -->
     <?jelly escape-by-default='true'?>
     
     <j:if test="${it.Exception}">
@@ -63,6 +63,7 @@
                       <j:set var="clipMessageTabs" value="${1}" />
                       <j:set var="outputClipPath" value="${false}" />
                       
+                      <!-- Check if the clip path should be output -->
                       <j:if test="${empty(prevClipName) || prevClipName != clipPath}">
                           <j:set var="prevClipName" value="${clipPath}" />
                           <j:set var="outputClipPath" value="${true}" />   
@@ -87,6 +88,8 @@
                       </j:forEach>
                                                   
                       <j:forEach var="tab" begin="1" end="${clipMessageTabs}">
+                        <!-- Output the tabs for the verification message based on
+                         the number of clips involved -->
                         <div style="display:inline; padding-left:3em"></div>
                       </j:forEach>
                       
@@ -106,8 +109,8 @@
                       </j:choose>
                       </div>
 	                    
-	                    <j:remove var="outputClipPath" />
-	                    <j:remove var="clipMessageTabs" />
+                      <j:remove var="outputClipPath" />
+                      <j:remove var="clipMessageTabs" />
                       <j:remove var="clipMessage" />
                       <j:remove var="clipPath" />
                       
