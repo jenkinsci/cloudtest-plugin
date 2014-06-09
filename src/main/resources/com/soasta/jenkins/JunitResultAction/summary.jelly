@@ -20,6 +20,9 @@
 		}
 		
    	</script>
+   	
+   	<!-- Escaping HTML to prevent cross-site scripting vulnerabilities. -->
+    <?jelly escape-by-default='true'?>
     
     <j:if test="${it.Exception}">
        <b>An error occurred inside the CloudTest plug-in: </b> <br/>
@@ -51,43 +54,62 @@
                   <j:when test="${!empty(it.getMessages())}">
                   
                     <j:set var="prevClipName" value="${null}" />
+                    
                     <j:forEach var="message" items="${it.getMessages()}">
                     
                       <div style="line-height: 20px">
-                      <j:set var="clipName" value="${message.getClipName()}" />
-                      <j:choose>
-                        <j:when test="${empty(prevClipName) || prevClipName != clipName}">
-                          <j:set var="prevClipName" value="${clipName}" />
-                        </j:when>
-                        <j:otherwise>
-                          <j:set var="clipName" value="${null}" />
-                        </j:otherwise>
-                      </j:choose>
-				              
-                      <!-- Output the clip name if it exists. -->
-                      <j:if test="${!empty(clipName)}">
-                          <div><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName}</div>
+                      <j:set var="clipPath" value="${message.getClipName()}" />
+                      <j:set var="clipMessage" value="${message.getContent()}" />
+                      <j:set var="clipMessageTabs" value="${1}" />
+                      <j:set var="outputClipPath" value="${false}" />
+                      
+                      <j:if test="${empty(prevClipName) || prevClipName != clipPath}">
+                          <j:set var="prevClipName" value="${clipPath}" />
+                          <j:set var="outputClipPath" value="${true}" />   
                       </j:if>
+                      
+                      <j:forEach var="clipName" items="${clipPath.split('/')}" varStatus="status">
+                        <j:if test="${outputClipPath}">
+                          <!-- Outputting the clip path since it has changed. -->
+                          <j:forEach var="tab" begin="1" end="${status.index}">
+                              <div style="display:inline; padding-left:3em"></div>
+                          </j:forEach>
                         
-                      <div style="display:inline; padding-left:3em"></div>
-          						
+                          <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName}</div>
+                          <div />
+                        </j:if>
+                        
+                        <j:if test="${status.last}">
+                          <!-- Record the number of clips involved -->
+                          <j:set var="clipMessageTabs" value="${status.count}" />
+                        </j:if>
+                        
+                      </j:forEach>
+                                                  
+                      <j:forEach var="tab" begin="1" end="${clipMessageTabs}">
+                        <div style="display:inline; padding-left:3em"></div>
+                      </j:forEach>
+                      
                       <!-- Output the validation message in red if it failed and in green 
                         if it succeeded, with the appropriate icons indicating failure
                         or success. -->
                       <j:choose>
 	                    
                         <j:when test="${message.getType() == 'validation-pass'}">
-                          <div style="display:inline; color: green"> <img src="${rootURL}/plugin/cloudtest/icon16_success.png" /> ${message.getContent()}</div>
+                          <div style="display:inline; color: green"> <img src="${rootURL}/plugin/cloudtest/icon16_success.png" /> ${clipMessage}</div>
                         </j:when>
 	                      
                         <j:otherwise>
-                          <div style="display:inline; color: red"> <img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${message.getContent()}</div>
+                          <div style="display:inline; color: red"> <img src="${rootURL}/plugin/cloudtest/icon16_error.png" /> ${clipMessage}</div>
                         </j:otherwise>
 	                    
                       </j:choose>
                       </div>
 	                    
-                      <j:remove var="clipName" />
+	                    <j:remove var="outputClipPath" />
+	                    <j:remove var="clipMessageTabs" />
+                      <j:remove var="clipMessage" />
+                      <j:remove var="clipPath" />
                       
                     </j:forEach>
                     <j:remove var="prevClipName" />
