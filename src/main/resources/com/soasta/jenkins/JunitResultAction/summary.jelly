@@ -72,11 +72,12 @@
                       <!-- Output each clip name in the clip path on its own indented line. -->
                       <j:forEach var="clipName" items="${clipPath.split('/')}" varStatus="status">
                         <j:if test="${outputClipPath}">
-                          <!-- Outputting the clip path since it has changed. -->
+                          <!-- Outputting the correct indentation needed in front of the clip name -->
                           <j:forEach var="tab" begin="1" end="${status.index}">
                               <div style="display:inline; padding-left:3em"></div>
                           </j:forEach>
                         
+                          <!-- Outputting the clip name in the path since the clip path has changed. -->
                           <div style="display:inline"><img src="${rootURL}/plugin/cloudtest/icon16_clip.png" /> ${clipName}</div>
                           <div />
                         </j:if>
