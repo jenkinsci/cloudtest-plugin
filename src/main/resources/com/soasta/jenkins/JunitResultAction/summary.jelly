@@ -69,6 +69,7 @@
                           <j:set var="outputClipPath" value="${true}" />   
                       </j:if>
                       
+                      <!-- Output each clip name in the clip path on its own indented line. -->
                       <j:forEach var="clipName" items="${clipPath.split('/')}" varStatus="status">
                         <j:if test="${outputClipPath}">
                           <!-- Outputting the clip path since it has changed. -->
@@ -84,12 +85,11 @@
                           <!-- Record the number of clips involved -->
                           <j:set var="clipMessageTabs" value="${status.count}" />
                         </j:if>
-                        
                       </j:forEach>
-                                                  
+                      
+                      <!-- Output the tabs for the verification message based on
+                       the number of clips involved -->                            
                       <j:forEach var="tab" begin="1" end="${clipMessageTabs}">
-                        <!-- Output the tabs for the verification message based on
-                         the number of clips involved -->
                         <div style="display:inline; padding-left:3em"></div>
                       </j:forEach>
                       
