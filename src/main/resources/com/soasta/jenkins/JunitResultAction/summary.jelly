@@ -62,17 +62,17 @@
                       <j:set var="outputClipPath" value="${false}" />
                       <j:set var="clipMessageTabs" value="${1}" />
                       
-                      <j:set var="clipPath" value="${message.getClipName()}" />
+                      <j:set var="currentClipPath" value="${message.getClipName()}" />
                       <j:set var="clipMessage" value="${message.getContent()}" />
                       
                       <!-- Check if the clip path should be output -->
-                      <j:if test="${empty(prevClipPath) || prevClipPath != clipPath}">
-                          <j:set var="prevClipPath" value="${clipPath}" />
+                      <j:if test="${empty(prevClipPath) || prevClipPath != currentClipPath}">
+                          <j:set var="prevClipPath" value="${currentClipPath}" />
                           <j:set var="outputClipPath" value="${true}" />   
                       </j:if>
                       
                       <!-- Output each clip name in the clip path on its own indented line. -->
-                      <j:forEach var="clipName" items="${clipPath.split('/')}" varStatus="status">
+                      <j:forEach var="clipName" items="${currentClipPath.split('/')}" varStatus="status">
                         <j:if test="${outputClipPath}">
                           <!-- Outputting the correct indentation needed in front of the clip name -->
                           <j:forEach var="tab" begin="1" end="${status.index}">
@@ -115,7 +115,7 @@
                       <j:remove var="outputClipPath" />
                       <j:remove var="clipMessageTabs" />
                       <j:remove var="clipMessage" />
-                      <j:remove var="clipPath" />
+                      <j:remove var="currentClipPath" />
                       
                     </j:forEach>
                     <j:remove var="prevClipPath" />
