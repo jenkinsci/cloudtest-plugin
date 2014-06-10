@@ -41,7 +41,7 @@ import javax.xml.xpath.XPathFactory;
 @SuppressWarnings("deprecation")
 public class JunitResultPublisher extends TestDataPublisher
 {
-  private static final String MESSAGE_CLIP_PATH = "clipPath";
+  private static final String MESSAGE_PATH = "path";
   private static final String MESSAGE_CLIP_TYPE = "type";
   
   private String urlOverride;
@@ -132,7 +132,7 @@ public class JunitResultPublisher extends TestDataPublisher
             {
               // Initialize the values that will be taken out
               String type = null;      // The type of message (i.e. "validation-pass").
-              String clipPath = null;  // The full path of the clip the message is from.
+              String path = null;  // The full path of the clip the message is from.
               String message = null;   // The result message itself.
               Message resultsMessage = null;    // The message object that will be created from the strings: type and message.
               for (int i = 0; i < messageNodes.getLength(); i++)
@@ -143,11 +143,11 @@ public class JunitResultPublisher extends TestDataPublisher
                 // attributes.
                 type = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_CLIP_TYPE) != null ?
                   messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_CLIP_TYPE).getTextContent() : null;
-                clipPath = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_CLIP_PATH) != null ?
-                  messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_CLIP_PATH).getTextContent() : null;
+                path = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_PATH) != null ?
+                  messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_PATH).getTextContent() : null;
                 message = messageNodes.item(i).getTextContent();
                 
-                resultsMessage = new Message(type, clipPath, message);
+                resultsMessage = new Message(type, path, message);
                 // Add it to the list.  It is assumed that the messages being parsed
                 // are already in chronological order.
                 messages.add(resultsMessage);
