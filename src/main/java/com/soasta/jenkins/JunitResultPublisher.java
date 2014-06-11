@@ -131,12 +131,12 @@ public class JunitResultPublisher extends TestDataPublisher
               { 
                 Node messageNode = messageNodes.item(i);
                 
-                // Checks to see if there's a type and path associated with this message
-                // tag. This check ensures the code is backwards compatible with older
+                // Checks to see if there are type and path attributes in this message.
+                // This check ensures the code is backwards compatible with older
                 // versions of CloudTest, where the result messages contained neither type
                 // nor path attributes.
                 String type = getNodeTextContent(messageNode, MESSAGE_CLIP_TYPE); // The type of message (i.e. "validation-pass").
-                String path = getNodeTextContent(messageNode, MESSAGE_PATH); // The full path of the clip the message is from.
+                String path = getNodeTextContent(messageNode, MESSAGE_PATH); // The full path of the clip.
                 
                 if (path == null)
                 {
