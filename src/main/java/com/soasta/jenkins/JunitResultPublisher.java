@@ -22,6 +22,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
 import java.io.IOException;
@@ -42,6 +43,7 @@ import javax.xml.xpath.XPathFactory;
 public class JunitResultPublisher extends TestDataPublisher
 {
   private static final String MESSAGE_PATH = "path";
+  private static final String MESSAGE_CLIP_NAME = "clipName";
   private static final String MESSAGE_CLIP_TYPE = "type";
   
   private String urlOverride;
@@ -124,22 +126,27 @@ public class JunitResultPublisher extends TestDataPublisher
 
             if (messageNodes != null)
             {
-              // Initialize the values that will be taken out
-              String type = null;      // The type of message (i.e. "validation-pass").
-              String path = null;  // The full path of the clip the message is from.
-              String message = null;   // The result message itself.
               Message resultsMessage = null;    // The message object that will be created from the strings: type and message.
               for (int i = 0; i < messageNodes.getLength(); i++)
-              {
-                // Checks to see if there's a type attribute associated with this message
-                // tag. This check is to make the code is backwards compatible with older
-                // versions of CloudTest, where the result messages did not contain type
-                // attributes.
-                type = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_CLIP_TYPE) != null ?
-                  messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_CLIP_TYPE).getTextContent() : null;
-                path = messageNodes.item(i).hasAttributes() && messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_PATH) != null ?
-                  messageNodes.item(i).getAttributes().getNamedItem(MESSAGE_PATH).getTextContent() : null;
-                message = messageNodes.item(i).getTextContent();
+              { 
+                Node messageNode = messageNodes.item(i);
+                
+                // Checks to see if there's a type and path associated with this message
+                // tag. This check ensures the code is backwards compatible with older
+                // versions of CloudTest, where the result messages contained neither type
+                // nor path attributes.
+                String type = getNodeTextContent(messageNode, MESSAGE_CLIP_TYPE); // The type of message (i.e. "validation-pass").
+                String path = getNodeTextContent(messageNode, MESSAGE_PATH); // The full path of the clip the message is from.
+                
+                if (path == null)
+                {
+                  // Get the name of the clip and use the clip name if clip path is not
+                  // available.  This will also ensure backwards compatibility when a
+                  // message's clip name was passed but the message's path was not.
+                  path = getNodeTextContent(messageNode, MESSAGE_CLIP_NAME);
+                }
+                
+                String message = messageNode.getTextContent(); // The result message itself.
                 
                 resultsMessage = new Message(type, path, message);
                 // Add it to the list.  It is assumed that the messages being parsed
@@ -174,6 +181,23 @@ public class JunitResultPublisher extends TestDataPublisher
     return data;
   }
 
+  private String getNodeTextContent(Node node, String namedItem)
+  {
+    if (node == null || !node.hasAttributes())
+    {
+      return null;
+    }
+    
+    Node nodeValue = node.getAttributes().getNamedItem(namedItem);
+    
+    if (nodeValue == null)
+    {
+      return null;
+    }
+    
+    return nodeValue.getTextContent();
+  }
+  
   @Override
   public DescriptorImpl getDescriptor()
   {
