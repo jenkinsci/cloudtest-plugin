@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
+ * Copyright (c) 2012-2014, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -44,15 +44,19 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     private final String composition;
     private final boolean deleteOldResults;
     private final int maxDaysOfResults;
+    private final String systemProperties;
+    private final String customProperties;
     private final String additionalOptions;
 
     @DataBoundConstructor
     public TestCompositionRunner(String url, String cloudTestServerID, String composition, DeleteOldResultsSettings deleteOldResults,
-      String additionalOptions) {
+      String systemProperties, String customProperties, String additionalOptions) {
         super(url, cloudTestServerID);
         this.composition = composition;
         this.deleteOldResults = (deleteOldResults != null);
         this.maxDaysOfResults = (deleteOldResults == null ? 0 : deleteOldResults.maxDaysOfResults);
+        this.systemProperties = systemProperties;
+        this.customProperties = customProperties;
         this.additionalOptions = additionalOptions;
     }
 
@@ -66,6 +70,14 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
 
     public int getMaxDaysOfResults() {
         return maxDaysOfResults;
+    }
+
+    public String getSystemProperties() {
+        return systemProperties;
+    }
+
+    public String getCustomProperties() {
+        return customProperties;
     }
 
     public String getAdditionalOptions() {
@@ -85,7 +97,9 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions);
+        return new TestCompositionRunner(getUrl(), s.getId(), composition, 
+            deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, 
+            systemProperties, customProperties, additionalOptions);
     }
 
     @Override
@@ -96,8 +110,16 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         // Split by newline.
         EnvVars envs = build.getEnvironment(listener);
         String[] compositions = envs.expand(this.composition).split("[\r\n]+");
+        String systemPropertiesExpanded = systemProperties == null ? 
+          null : envs.expand(systemProperties);
+        String customPropertiesExpanded = customProperties == null ? 
+          null : envs.expand(customProperties);
         String additionalOptionsExpanded = additionalOptions == null ? 
-            null : envs.expand(additionalOptions);
+          null : envs.expand(additionalOptions);
+        String[] system = systemPropertiesExpanded == null ?
+          null : new QuotedStringTokenizer(systemPropertiesExpanded, ",\n\r").toArray();
+        String[] custom = customPropertiesExpanded == null ?
+          null : new QuotedStringTokenizer(customPropertiesExpanded, ",\n\r").toArray();
         String[] options = additionalOptionsExpanded == null ?
             null : new QuotedStringTokenizer(additionalOptionsExpanded).toArray();
 
@@ -123,6 +145,22 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             // Make sure the directory exists.
             xml.getParent().mkdirs();
 
+            // Add the system properties to the composition if there are any.
+            if (system != null) {
+              for (String systemProperty : system)
+              {
+                args.add("systemproperty=" + systemProperty);
+              }
+            }
+            
+            // Add the custom properties to the composition if there are any.
+            if (custom != null) {
+              for (String customProperty : custom)
+              {
+                args.add("customproperty=" + customProperty);
+              }
+            }
+            
             // Add the additional options to the composition if there are any.
             if (options != null) {
                 args.add(options);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013, SOASTA, Inc.
+ * Copyright (c) 2011-2014, SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -215,7 +215,7 @@ public class JunitResultPublisher extends TestDataPublisher
       {
         String id = testObject.getId();
         JunitResultAction a = actions.get(id);
-        if (a!=null)
+        if (a != null)
         {
           return Collections.<TestAction>singletonList(a);
         }
