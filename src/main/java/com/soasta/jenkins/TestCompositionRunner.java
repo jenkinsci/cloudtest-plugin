@@ -9,30 +9,33 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.LocalLauncher;
-import hudson.model.AbstractBuild;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
-import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
-import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.model.AbstractBuild;
+import hudson.model.Descriptor;
 import hudson.tasks.junit.TestDataPublisher;
+import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.QuotedStringTokenizer;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.StringReader;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Logger;
+
 import jenkins.model.Jenkins;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.Collections;
-import java.util.logging.Logger;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -45,17 +48,23 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     private final boolean deleteOldResults;
     private final int maxDaysOfResults;
     private final String additionalOptions;
-
+    private final List<TransactionThreshold> thresholds;
+     
     @DataBoundConstructor
     public TestCompositionRunner(String url, String cloudTestServerID, String composition, DeleteOldResultsSettings deleteOldResults,
-      String additionalOptions) {
+      String additionalOptions, List<TransactionThreshold> thresholds) {
         super(url, cloudTestServerID);
         this.composition = composition;
         this.deleteOldResults = (deleteOldResults != null);
         this.maxDaysOfResults = (deleteOldResults == null ? 0 : deleteOldResults.maxDaysOfResults);
         this.additionalOptions = additionalOptions;
+        this.thresholds = thresholds;
     }
-
+    
+    public List<TransactionThreshold> getThresholds() {
+        return thresholds;
+    }
+    
     public String getComposition() {
         return composition;
     }
@@ -85,7 +94,7 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions);
+        return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions,thresholds);
     }
 
     @Override
@@ -100,13 +109,22 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             null : envs.expand(additionalOptions);
         String[] options = additionalOptionsExpanded == null ?
             null : new QuotedStringTokenizer(additionalOptionsExpanded).toArray();
-
+  
         for (String composition : compositions) {
             ArgumentListBuilder args = getSCommandArgs(build, listener);
 
             args.add("cmd=play", "wait", "format=junitxml")
                 .add("name=" + composition);
-
+            
+            // if thresholds are included in this post-build action, add them to scommand arguments 
+            if (thresholds != null) {
+                displayTransactionThreholds(listener.getLogger());
+              
+                for (TransactionThreshold threshold : thresholds) {
+                    args.add("validation=" + threshold.toScommandString());
+                }
+            }
+            
             String fileName = composition + ".xml";
   
             // Strip off any leading slash characters (composition names
@@ -172,7 +190,18 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
                 Collections.singleton(new JunitResultPublisher(null))));
         return archiver.perform(build,launcher,listener);
     }
-
+    
+    private void displayTransactionThreholds(PrintStream jenkinsLogger) {
+        String THRESHOLD_TABLE_FORMAT = "%-15s %-20s %7s";
+        jenkinsLogger.println("~");
+        jenkinsLogger.println("Custom Transaction Threholds:");
+        for (TransactionThreshold threshold : thresholds) {
+            String formattedString = String.format(THRESHOLD_TABLE_FORMAT,threshold.getTransactionname(),threshold.getThresholdname(),threshold.getThresholdvalue());
+            jenkinsLogger.println(formattedString);
+        }
+        jenkinsLogger.println("~");
+    }
+       
     @Extension
     public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
