@@ -83,6 +83,13 @@ public class JunitResultPublisher extends TestDataPublisher
       // Get local path of the build's workspace.
       String workspacePath = build.getWorkspace().getRemote();
 
+      // Check if there is a file to parse through
+      if (fileName == null || fileName.isEmpty())
+      {
+        listener.error("The selected JUnit XML file " + sr.getName() + " has no content in it.  Skipping.");
+        continue;
+      }
+
       // Is the JUnit XML file in the workspace?
       if (fileName.startsWith(workspacePath))
       {
@@ -214,10 +221,10 @@ public class JunitResultPublisher extends TestDataPublisher
       if (testObject instanceof CaseResult)
       {
         String id = testObject.getId();
-        JunitResultAction a = actions.get(id);
-        if (a!=null)
+        JunitResultAction action = actions.get(id);
+        if (action != null)
         {
-          return Collections.<TestAction>singletonList(a);
+          return Collections.<TestAction>singletonList(action);
         }
       }
 
