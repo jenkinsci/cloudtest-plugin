@@ -24,4 +24,8 @@ f.advanced {
   f.entry(title:"Transaction Thresholds") {
     f.repeatableProperty(field:"thresholds")
   }
+
+  f.entry(title:"Generate CSV for Plot Plugin",field:"generatePlotCSV") {
+      f.checkbox()
+  }
 }

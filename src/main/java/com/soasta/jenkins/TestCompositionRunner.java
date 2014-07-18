@@ -49,16 +49,18 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     private final int maxDaysOfResults;
     private final String additionalOptions;
     private final List<TransactionThreshold> thresholds;
+    private final boolean generatePlotCSV;
      
     @DataBoundConstructor
     public TestCompositionRunner(String url, String cloudTestServerID, String composition, DeleteOldResultsSettings deleteOldResults,
-      String additionalOptions, List<TransactionThreshold> thresholds) {
+      String additionalOptions, List<TransactionThreshold> thresholds, boolean generatePlotCSV) {
         super(url, cloudTestServerID);
         this.composition = composition;
         this.deleteOldResults = (deleteOldResults != null);
         this.maxDaysOfResults = (deleteOldResults == null ? 0 : deleteOldResults.maxDaysOfResults);
         this.additionalOptions = additionalOptions;
         this.thresholds = thresholds;
+        this.generatePlotCSV = generatePlotCSV;
     }
     
     public List<TransactionThreshold> getThresholds() {
@@ -81,6 +83,10 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         return additionalOptions;
     }
 
+    public boolean getGeneratePlotCSV() {
+        return generatePlotCSV;
+    }
+
     public Object readResolve() throws IOException {
         if (getCloudTestServerID() != null)
             return this;
@@ -94,7 +100,7 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions,thresholds);
+        return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions, thresholds, generatePlotCSV);
     }
 
     @Override
@@ -145,7 +151,11 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             if (options != null) {
                 args.add(options);
             }
-            
+
+            if (generatePlotCSV) {
+                args.add("outputthresholdcsvdir=" + build.getWorkspace());
+            }
+
             // Run it!
             int exitCode = launcher
                 .launch()
