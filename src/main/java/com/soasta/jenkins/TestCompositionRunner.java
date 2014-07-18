@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, CloudBees, Inc., SOASTA, Inc.
+ * Copyright (c) 2012-2014, CloudBees, Inc., SOASTA, Inc.
  * All Rights Reserved.
  */
 package com.soasta.jenkins;
@@ -35,7 +35,6 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
 
 /**
  * @author Kohsuke Kawaguchi
@@ -113,6 +112,12 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
         for (String composition : compositions) {
             ArgumentListBuilder args = getSCommandArgs(build, listener);
 
+            // check and make sure the composition path specified starts from the root folder.
+            if (!composition.startsWith("/"))
+            {
+              composition = "/" + composition;
+            }
+            
             args.add("cmd=play", "wait", "format=junitxml")
                 .add("name=" + composition);
             
