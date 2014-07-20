@@ -28,7 +28,10 @@ public class TransactionThreshold extends AbstractDescribableImpl<TransactionThr
   private static final String BYTES_RECEIVED  = "Total Bytes Received";
   private static final String TRANSACTION_ERRORS = "Errors Per Transaction";
   private static final String MIN_TRANSACTION_COUNT = "Minimum Transaction Count";
-  
+  private static final String MIN_DURATION     = "Min Duration";
+  private static final String MAX_DURATION     = "Max Duration";
+  private static final String AVG_DURATION     = "Average Duration";
+    
   private static final char   THRESHOLD_STR_SEPERATOR = '/' ; 
   private static final String THRESHOLD_TO_SCOMMAND_FORMAT  = "%s" + THRESHOLD_STR_SEPERATOR + "%s" + THRESHOLD_STR_SEPERATOR + "%s";
 
@@ -131,7 +134,11 @@ public class TransactionThreshold extends AbstractDescribableImpl<TransactionThr
       listBox.add(BYTES_SENT, "TotalBytesSent");
       listBox.add(BYTES_RECEIVED, "TotalBytesReceived");
       listBox.add(TRANSACTION_ERRORS, "ErrorsPerTransaction");
-      listBox.add(MIN_TRANSACTION_COUNT, "MinimumTransactionCount");      
+      listBox.add(MIN_TRANSACTION_COUNT, "MinimumTransactionCount");   
+      listBox.add(MIN_DURATION, "MinDuration");
+      listBox.add(MAX_DURATION, "MaxDuration");
+      listBox.add(AVG_DURATION, "AverageDuration");
+      
 
       return listBox;
     }
