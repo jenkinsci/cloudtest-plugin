@@ -27,10 +27,8 @@
 						oIfr.style.display="none";
 					}
 				} catch (e) {
-					<!-- Mixed-content present, but blocking did not take affect.  This is because a DOMException
-					concerning "SecurityError", will be thrown if the iframe succeeded and did not load an empty
-					frame. -->
-					if (oSerr.style.display=="block") {
+					<!-- A DOMException concerning "SecurityError" will be thrown if the iframe succeeded in loading. -->
+					if (oSerr) {
 						oSerr.style.display="none";
 					}
 
