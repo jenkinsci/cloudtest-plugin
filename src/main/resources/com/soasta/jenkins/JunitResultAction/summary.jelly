@@ -5,37 +5,40 @@
 	<?jelly escape-by-default='true'?>
 
 	<script type="text/javascript">
-	
 		function myshow(){
 			var oIfr = document.getElementById("ifr");
 			var oAid = document.getElementById("aid");
 			var oSerr = document.getElementById("serr");
 			
-			if ((document.URL.indexOf("https://")==oIfr.src.indexOf("https://")) || 
-				(document.URL.indexOf("http://")==oIfr.src.indexOf("http://"))) {
-				<!-- The contents match.  No mixed-content blocking. -->
+			if (oIfr.style.display=="block" || oSerr.style.display=="block") {
 				if (oSerr.style.display=="block") {
-			    		oSerr.style.display="none";
-				}
-				
-				if (oIfr.style.display=="block") {
-					oIfr.style.display="none";
-					oAid.innerHTML = "Click here to see the SOASTA CloudTest dashboard for this test";
-				} else {
+                	oSerr.style.display="none";
+            	}
+
+				oIfr.style.display="none";
+				oAid.innerHTML = "Click here to see the SOASTA CloudTest dashboard for this test";
+			} else {
+				try {
+					if (oIfr.contentDocument &amp;&amp; 
+						(!oIfr.contentDocument.body || !oIfr.contentDocument.body.innerHTML)) {
+						<!-- Mixed-content blocking message needed. -->
+						oAid.innerHTML = "SOASTA CloudTest dashboard for this test is currently unavailable";
+						oSerr.style.display="block";
+						oIfr.style.display="none";
+					}
+				} catch (e) {
+					<!-- Mixed-content present, but blocking did not take affect.  This is because a DOMException
+					concerning "SecurityError", will be thrown if the iframe succeeded and did not load an empty
+					frame. -->
+					if (oSerr.style.display=="block") {
+						oSerr.style.display="none";
+					}
+
 					oIfr.style.display="block"
 					oAid.innerHTML = "Click here to hide the SOASTA CloudTest dashboard";
 				}
-			} else {
-				<!-- Mixed-content blocking message needed. -->
-				if (oIfr.style.display=="block") {
-			    		oIfr.style.display="none";
-				}
-				
-				oSerr.style.display="block";
-				oAid.innerHTML = "SOASTA CloudTest dashboard for this test is currently unavailable";
 			}
 		}
-		
    	</script>
     
     <j:if test="${it.Exception}">
