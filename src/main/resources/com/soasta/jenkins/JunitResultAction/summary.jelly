@@ -12,8 +12,8 @@
 			
 			if (oIfr.style.display=="block" || oSerr.style.display=="block") {
 				if (oSerr.style.display=="block") {
-                	oSerr.style.display="none";
-            	}
+					oSerr.style.display="none";
+				}
 
 				oIfr.style.display="none";
 				oAid.innerHTML = "Click here to see the SOASTA CloudTest dashboard for this test";
