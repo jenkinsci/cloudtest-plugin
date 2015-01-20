@@ -34,7 +34,7 @@
 						oSerr.style.display="none";
 					}
 
-					oIfr.style.display="block"
+					oIfr.style.display="block";
 					oAid.innerHTML = "Click here to hide the SOASTA CloudTest dashboard";
 				}
 			}
