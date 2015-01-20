@@ -11,9 +11,9 @@
 			var oSerr = document.getElementById("serr");
 			
 			if (oIfr.style.display=="block" || oSerr.style.display=="block") {
+				oAid.innerHTML = "Click here to see the SOASTA CloudTest dashboard for this test";
 				oSerr.style.display="none";
 				oIfr.style.display="none";
-				oAid.innerHTML = "Click here to see the SOASTA CloudTest dashboard for this test";
 			} else {
 				try {
 					if (oIfr.contentDocument &amp;&amp; 
@@ -25,9 +25,9 @@
 					}
 				} catch (e) {
 					<!-- A DOMException concerning "SecurityError" will be thrown if the iframe succeeded in loading. -->
+					oAid.innerHTML = "Click here to hide the SOASTA CloudTest dashboard";
 					oSerr.style.display="none";
 					oIfr.style.display="block";
-					oAid.innerHTML = "Click here to hide the SOASTA CloudTest dashboard";
 				}
 			}
 		}
