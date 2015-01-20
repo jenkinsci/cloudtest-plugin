@@ -15,7 +15,7 @@
 				(document.URL.indexOf("http://")==oIfr.src.indexOf("http://"))) {
 				<!-- The contents match.  No mixed-content blocking. -->
 				if (oSerr.style.display=="block") {
-			    	oSerr.style.display="none";
+			    		oSerr.style.display="none";
 				}
 				
 				if (oIfr.style.display=="block") {
@@ -28,7 +28,7 @@
 			} else {
 				<!-- Mixed-content blocking message needed. -->
 				if (oIfr.style.display=="block") {
-			    	oIfr.style.display="none";
+			    		oIfr.style.display="none";
 				}
 				
 				oSerr.style.display="block";
