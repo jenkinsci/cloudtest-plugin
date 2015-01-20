@@ -155,7 +155,7 @@
                             </div>
                             
                                             
-							<!-- If no mixed-content blocking issues, allow the viewer to directly see the result in the iframe provided below -->
+                            <!-- If no mixed-content blocking issues, allow the viewer to directly see the result in the iframe provided below -->
                             <iframe id="ifr" src="${it.Url}/Central?initResultsTab=${it.ResultID}" style="display:none" width="100%" height="1000"></iframe>
             </j:if>
             
