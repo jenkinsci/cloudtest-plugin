@@ -81,10 +81,15 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         if (username == null || username.isEmpty()) {
           this.username = "";
-          this.password = null;
         }
         else {
           this.username = username;
+        }
+        
+        if (password == null || password.getPlainText() == null || password.getPlainText().isEmpty()) {
+          this.password = null;
+        }
+        else {
           this.password = password;
         }
 
