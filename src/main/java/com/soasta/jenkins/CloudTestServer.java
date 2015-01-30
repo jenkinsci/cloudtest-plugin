@@ -79,8 +79,19 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             this.url = url;
         }
 
-        this.username = username;
-        this.password = password;
+        if (username == null || username.isEmpty()) {
+          this.username = "";
+        }
+        else {
+          this.username = username;
+        }
+        
+        if (password == null || password.getPlainText() == null || password.getPlainText().isEmpty()) {
+          this.password = null;
+        }
+        else {
+          this.password = password;
+        }
 
         // If the ID is empty, auto-generate one.
         if (id == null || id.isEmpty()) {
@@ -98,6 +109,10 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         // If the name is empty, default to URL + user name.
         if (name == null || name.isEmpty()) {
+          if (this.url == null) {
+            this.name = "";
+          }
+          else {
             this.name = url + " (" + username + ")";
 
             // This is probably a configuration created using
@@ -105,6 +120,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             // existed).  Set a flag so we can write the new
             // values after initialization (see DescriptorImpl).
             generatedIdOrName = true;
+          }
         }
         else {
             this.name = name;
@@ -158,7 +174,12 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         PostMethod post = new PostMethod(url + "Login");
         post.addParameter("userName",getUsername());
-        post.addParameter("password",getPassword().getPlainText());
+        
+        if (getPassword() != null) {
+          post.addParameter("password",getPassword().getPlainText());
+        } else {
+          post.addParameter("password","");
+        }
 
         hc.executeMethod(post);
 

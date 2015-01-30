@@ -56,8 +56,10 @@ public abstract class AbstractSCommandBuilder extends Builder {
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand)
           .add("url=" + s.getUrl())
-          .add("username="+s.getUsername())
-          .addMasked("password=" + s.getPassword());
+          .add("username="+s.getUsername());
+          
+      if (s.getPassword() != null)
+          args.addMasked("password=" + s.getPassword());
       
       ProxyConfiguration proxyConfig = Jenkins.getInstance().proxy;
 

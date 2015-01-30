@@ -262,8 +262,10 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             args.add(install(s))
                 .add("list", "type=composition")
                 .add("url=" + s.getUrl())
-                .add("username=" + s.getUsername())
-                .addMasked("password=" + s.getPassword());
+                .add("username=" + s.getUsername());
+            
+            if (s.getPassword() != null)
+                args.addMasked("password=" + s.getPassword());
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             int exit = new LocalLauncher(TaskListener.NULL).launch().cmds(args).stdout(out).join();

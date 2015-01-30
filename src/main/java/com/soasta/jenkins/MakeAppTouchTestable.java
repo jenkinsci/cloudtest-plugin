@@ -149,8 +149,10 @@ public class MakeAppTouchTestable extends Builder {
         args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
             .add("-overwriteapp")
             .add("-url").add(s.getUrl())
-            .add("-username",s.getUsername())
-            .add("-password").addMasked(s.getPassword().getPlainText());
+            .add("-username",s.getUsername());
+            
+        if (s.getPassword() != null)
+            args.add("-password").addMasked(s.getPassword().getPlainText());
 
         args.add(inputType.getInputType(), envs.expand(projectFile));
         
