@@ -15,12 +15,12 @@ import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -61,6 +61,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
     private final String id;
     private final String name;
+    
+    private static final String REPOSITORY_SERVICE_BASE_URL = "/services/rest/RepositoryService/v1/Tokens";
 
     private transient boolean generatedIdOrName;
 
@@ -172,7 +174,35 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     public FormValidation validate() throws IOException {
         HttpClient hc = createClient();
 
-        PostMethod post = new PostMethod(url + "Login");
+        // to validate the credentials we will request a token from the repository. 
+        
+        JSONObject obj =  new JSONObject();
+        obj.put("userName", username);
+        obj.put("password", password.getPlainText());
+        
+        PutMethod put = new PutMethod(url + REPOSITORY_SERVICE_BASE_URL);
+        
+        StringRequestEntity requestEntity = new StringRequestEntity(
+          obj.toString(),
+          "application/json",
+          "UTF-8");
+        
+        put.setRequestEntity(requestEntity);
+        int statusCode = hc.executeMethod(put);
+        LOGGER.info("Status code got back for URL: " + (url + REPOSITORY_SERVICE_BASE_URL) + " STATUS : " + statusCode );
+        
+        switch (statusCode)
+        {
+            case 200:
+              return FormValidation.ok("Success!");
+            case 404:
+              return FormValidation.error("[404] Could not find the server");
+            case 401:
+              return FormValidation.error("[401] Invalid Credentials");
+            default: 
+              return FormValidation.error("Unknown error, Http Code " + statusCode);
+        }
+        /* PostMethod post = new PostMethod(url + "Login");
         post.addParameter("userName",getUsername());
         
         if (getPassword() != null) {
@@ -192,7 +222,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             return FormValidation.error(getUrl()+" doesn't look like a CloudTest server");
 
         // if it fails, the server responds with 200!
-        return FormValidation.error("Invalid credentials.");
+        return FormValidation.error("Invalid credentials."); */
     }
 
     /**
