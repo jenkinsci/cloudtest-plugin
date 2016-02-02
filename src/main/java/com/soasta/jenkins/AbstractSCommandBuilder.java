@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.regex.Pattern;
 
+import com.soasta.jenkins.cloud.CTMInfo;
+
 import jenkins.model.Jenkins;
 import hudson.AbortException;
 import hudson.FilePath;
@@ -22,6 +24,8 @@ public abstract class AbstractSCommandBuilder extends Builder {
      * URL of the server to use (deprecated).
      */
     private final String url;
+    
+    private CTMInfo ctmInfo;
     /**
      * ID of the server to use.
      * @see CloudTestServer
@@ -40,6 +44,11 @@ public abstract class AbstractSCommandBuilder extends Builder {
     public String getUrl() {
         return url;
     }
+    
+    public void setCTMInfo(CTMInfo info)
+    {
+      ctmInfo = info;
+    }
 
     public String getCloudTestServerID() {
         return cloudTestServerID;
@@ -54,12 +63,26 @@ public abstract class AbstractSCommandBuilder extends Builder {
       FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
   
       ArgumentListBuilder args = new ArgumentListBuilder();
-      args.add(scommand)
-          .add("url=" + s.getUrl())
-          .add("username="+s.getUsername());
-          
-      if (s.getPassword() != null)
+      // if the child class is a CTM related Scommand task, it wil set CTM info
+      if (ctmInfo == null)
+      {
+        args.add(scommand)
+        .add("url=" + s.getUrl())
+        .add("username="+s.getUsername());
+        
+        if (s.getPassword() != null)
+        {
           args.addMasked("password=" + s.getPassword());
+        }
+      }
+      else
+      {
+        args.add(scommand)
+        .add("url=" + ctmInfo.getCtmURL())
+        .add("username="+ ctmInfo.getCtmUserName());
+         
+        args.addMasked("password=" + ctmInfo.getCtmPassword());
+      }
       
       ProxyConfiguration proxyConfig = Jenkins.getInstance().proxy;
 
