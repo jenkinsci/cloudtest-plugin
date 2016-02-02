@@ -36,6 +36,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
+import org.jenkinsci.remoting.RoleChecker;
 /*******************************************************************************************************************************
  * END (Jenkins User-Agent change related imports)
  *******************************************************************************************************************************/
@@ -137,6 +138,12 @@ public class CommonInstaller extends DownloadFromUrlInstaller
                   }
               }
           }
+      }
+      @Override
+      public void checkRoles(RoleChecker arg0) throws SecurityException
+      {
+        // TODO Auto-generated method stub
+        
       }
   }
   
@@ -311,6 +318,12 @@ public class CommonInstaller extends DownloadFromUrlInstaller
         } finally {
             zip.close();
         }
+    }
+    @Override
+    public void checkRoles(RoleChecker arg0) throws SecurityException
+    {
+      // TODO Auto-generated method stub
+      
     }
   }
   /*******************************************************************************************************************************
