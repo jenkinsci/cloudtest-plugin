@@ -80,7 +80,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
                 url+="concerto/";
             this.url = url;
         }
-
+        
         if (username == null || username.isEmpty()) {
           this.username = "";
         }
