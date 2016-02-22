@@ -10,6 +10,7 @@ import java.net.URL;
 import java.util.regex.Pattern;
 
 import com.soasta.jenkins.CloudTestServer;
+import com.soasta.jenkins.ProxyChecker;
 import com.soasta.jenkins.SCommandInstaller;
 
 import jenkins.model.Jenkins;
@@ -93,21 +94,7 @@ public class CloudCommandBuilder {
           // Extract the destination CloudTest host.
           String host = new URL(s.getUrl()).getHost();
 
-          // Check if the proxy applies for this destination host.
-          // This code is more or less copied from ProxyConfiguration.createProxy() :-(.
-          boolean isNonProxyHost = false;
-          for (Pattern p : proxyConfig.getNoProxyHostPatterns()) {
-              if (p.matcher(host).matches()) {
-                  // It's a match.
-                  // Don't use the proxy.
-                  isNonProxyHost = true;
-
-                  // No need to continue checking the list.
-                  break;
-              }
-          }
-
-          if (!isNonProxyHost) {
+          if (ProxyChecker.useProxy(host, proxyConfig)) {
               // Add the SCommand proxy parameters.
               args.add("httpproxyhost=" + proxyConfig.name)
                   .add("httpproxyport=" + proxyConfig.port);

@@ -204,27 +204,6 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             default: 
               return FormValidation.error("Unknown error, Http Code " + statusCode);
         }
-        /* PostMethod post = new PostMethod(url + "Login");
-        post.addParameter("userName",getUsername());
-        
-        if (getPassword() != null) {
-          post.addParameter("password",getPassword().getPlainText());
-        } else {
-          post.addParameter("password","");
-        }
-
-        hc.executeMethod(post);
-
-        // if the login succeeds, we'll see a redirect
-        Header loc = post.getResponseHeader("Location");
-        if (loc!=null && loc.getValue().endsWith("/Central"))
-            return FormValidation.ok("Success!");
-
-        if (!post.getResponseBodyAsString().contains("SOASTA"))
-            return FormValidation.error(getUrl()+" doesn't look like a CloudTest server");
-
-        // if it fails, the server responds with 200!
-        return FormValidation.error("Invalid credentials."); */
     }
 
     /**
@@ -283,15 +262,19 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
           this.getDescriptor().getDisplayName() + "\': <" + url + ">.");
     }
 
-    private HttpClient createClient() {
+    private HttpClient createClient() throws IOException {
         HttpClient hc = new HttpClient();
         
         hc.getParams().setParameter("http.socket.timeout", CONNECTION_TIMEOUT);
         hc.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT);
+        // get the actual host name to compare in the proxy checker.
+        String host = new URL(url).getHost();
         
         Jenkins j = Jenkins.getInstance();
         ProxyConfiguration jpc = j!=null ? j.proxy : null;
-        if(jpc != null) {
+        
+        if(jpc != null && jpc.name != null && ProxyChecker.useProxy(host, jpc)) 
+        {
             hc.getHostConfiguration().setProxy(jpc.name, jpc.port);
             if(jpc.getUserName() != null)
                 hc.getState().setProxyCredentials(AuthScope.ANY,new UsernamePasswordCredentials(jpc.getUserName(),jpc.getPassword()));
