@@ -55,6 +55,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
      * URL like "http://touchtestlite.soasta.com/concerto/"
      */
     private final String url;
+    
+    private static final int CONNECTION_TIMEOUT = Integer.parseInt(System.getProperty("com.soasta.Jenkins.ConnectionTimeout", "15000"));
 
     private final String username;
     private final Secret password;
@@ -283,6 +285,10 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
     private HttpClient createClient() {
         HttpClient hc = new HttpClient();
+        
+        hc.getParams().setParameter("http.socket.timeout", CONNECTION_TIMEOUT);
+        hc.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT);
+        
         Jenkins j = Jenkins.getInstance();
         ProxyConfiguration jpc = j!=null ? j.proxy : null;
         if(jpc != null) {
