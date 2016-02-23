@@ -39,6 +39,12 @@ public class StartTestEnvironment extends CloudCommandBasePostBuild
   {
     return "start-env";
   }
+  
+  @Override
+  public int getDefaultTimeout() 
+  {
+    return 1200;
+  }
 
   @Override
   public CloudStatus getSuccessStatus()

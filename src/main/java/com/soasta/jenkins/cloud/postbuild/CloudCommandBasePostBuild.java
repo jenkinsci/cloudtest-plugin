@@ -40,7 +40,15 @@ public abstract class CloudCommandBasePostBuild extends Recorder
     this.name = name;
     this.cloudTestServerID = cloudTestServerID;
     this.url = url;
-    this.timeOut = timeOut;
+    
+    if (timeOut == 0)
+    {
+      this.timeOut = getDefaultTimeout();
+    }
+    else
+    {
+      this.timeOut = timeOut;
+    }
   }
   
   public String getName()
@@ -111,7 +119,7 @@ public abstract class CloudCommandBasePostBuild extends Recorder
         // This should never happen, but just in case...
         return false;
     }
-    // hard coded to get to pass
+
     try
     {
       return isSucessful(xml.readToString());
@@ -135,6 +143,11 @@ public abstract class CloudCommandBasePostBuild extends Recorder
    */
   public abstract CloudStatus getSuccessStatus();
   
+  /**
+   * Returns the timeout until Checked Status, in Seconds. 
+   * @return
+   */
+  public abstract int getDefaultTimeout();
   
   /**
    * Parses the output xml for a success code. 

@@ -32,6 +32,12 @@ public class StartGrid extends CloudCommandBaseBuild
   {
     return "start-grid";
   }
+  
+  @Override
+  public int getDefaultTimeout() 
+  {
+    return 600;
+  }
 
   @Override
   public CloudStatus getSuccessStatus()

@@ -35,6 +35,12 @@ public class StopTestEnvironment extends CloudCommandBasePostBuild
   {
     return "terminate-env";
   }
+  
+  @Override
+  public int getDefaultTimeout() 
+  {
+    return 1200;
+  }
 
   @Override
   public CloudStatus getSuccessStatus()

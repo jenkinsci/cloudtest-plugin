@@ -35,6 +35,12 @@ public class StopGrid extends CloudCommandBaseBuild
   {
     return "terminate-grid";
   }
+  
+  @Override
+  public int getDefaultTimeout() 
+  {
+    return 600;
+  }
 
   @Override
   public CloudStatus getSuccessStatus()

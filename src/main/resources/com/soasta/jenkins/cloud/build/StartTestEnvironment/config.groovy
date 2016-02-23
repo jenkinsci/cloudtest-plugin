@@ -13,6 +13,6 @@ f.entry(title:"Test Environment Name",field:"name") {
 f.advanced {
 
   f.entry(title:"Seconds to wait until in ready status ",field:"timeOut") {
-    f.number(value:1200)
+    f.number()
   }
 }

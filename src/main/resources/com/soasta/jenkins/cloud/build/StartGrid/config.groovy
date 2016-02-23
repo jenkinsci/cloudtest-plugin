@@ -12,6 +12,6 @@ f.entry(title:"Grid Name",field:"name") {
 f.advanced {
 
   f.entry(title:"Seconds to wait until in ready status ",field:"timeOut") {
-    f.number(value:600)
+    f.number()
   }
 }

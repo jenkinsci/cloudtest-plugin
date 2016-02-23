@@ -44,6 +44,12 @@ public class StartRSDB extends CloudCommandBasePostBuild
   {
     return "start-rsdb";
   }
+  
+  @Override
+  public int getDefaultTimeout() 
+  {
+    return 1200;
+  }
 
   @Override
   public CloudStatus getSuccessStatus()

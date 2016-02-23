@@ -35,6 +35,12 @@ public class StopRSDB extends CloudCommandBaseBuild
   {
     return "terminate-rsdb";
   }
+  
+  @Override
+  public int getDefaultTimeout() 
+  {
+    return 1200;
+  }
 
   @Override
   public CloudStatus getSuccessStatus()

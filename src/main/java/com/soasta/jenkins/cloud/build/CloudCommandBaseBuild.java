@@ -41,7 +41,15 @@ public abstract class CloudCommandBaseBuild extends Builder
     this.name = name;
     this.cloudTestServerID = cloudTestServerID;
     this.url = url;
-    this.timeOut = timeOut;
+    // timeout wasn't specifed in the UI, use a default value
+    if (timeOut == 0)
+    {
+      this.timeOut = getDefaultTimeout();
+    }
+    else
+    {
+      this.timeOut = timeOut;
+    }
   }
   
   public String getCloudTestServerID()
@@ -136,7 +144,7 @@ public abstract class CloudCommandBaseBuild extends Builder
    */
   public abstract CloudStatus getSuccessStatus();
   
-  
+  public abstract int getDefaultTimeout();
   /**
    * Parses the output xml for a success code. 
    * @param xml
