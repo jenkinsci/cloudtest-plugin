@@ -2,11 +2,16 @@
  * Copyright (c) 2013, SOASTA, Inc.
  * All Rights Reserved.
  */
-package com.soasta.jenkins;
+package com.soasta.jenkins.cloud;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.regex.Pattern;
+
+import com.soasta.jenkins.CloudTestServer;
+import com.soasta.jenkins.ProxyChecker;
+import com.soasta.jenkins.SCommandInstaller;
 
 import jenkins.model.Jenkins;
 import hudson.AbortException;
@@ -17,42 +22,62 @@ import hudson.model.BuildListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 
-public abstract class AbstractSCommandBuilder extends Builder {
+public class CloudCommandBuilder {
     /**
      * URL of the server to use (deprecated).
      */
-    private final String url;
+    private String url;
     /**
      * ID of the server to use.
      * @see CloudTestServer
      */
-    private final String cloudTestServerID;
-
-    public AbstractSCommandBuilder(String url, String cloudTestServerID) {
-        this.url = url;
-        this.cloudTestServerID = cloudTestServerID;
-    }
+    private String cloudTestServerID;
+    private AbstractBuild<?, ?> build;
+    private BuildListener listener;
 
     public CloudTestServer getServer() {
         return CloudTestServer.getByID(cloudTestServerID);
+    }
+    
+    public CloudCommandBuilder setUrl(String url)
+    {
+      this.url = url;
+      return this;
     }
 
     public String getUrl() {
         return url;
     }
+    
+    public CloudCommandBuilder setCloudTestServerID(String value)
+    {
+      this.cloudTestServerID = value;
+      return this;
+    }
 
     public String getCloudTestServerID() {
         return cloudTestServerID;
     }
+    
+    public CloudCommandBuilder setBuild(AbstractBuild<?, ?> build)
+    {
+      this.build = build;
+      return this;
+    }
+    
+    public CloudCommandBuilder setListener(BuildListener listener)
+    {
+      this.listener = listener;
+      return this;
+    }
 
-    protected ArgumentListBuilder getSCommandArgs(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
+    public ArgumentListBuilder build() throws IOException, InterruptedException {
       CloudTestServer s = getServer();
       if (s == null)
           throw new AbortException("No TouchTest server is configured in the system configuration.");
-  
-      // Download SCommand, if needed.
+      
       FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
-  
+      
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand)
           .add("url=" + s.getUrl())
