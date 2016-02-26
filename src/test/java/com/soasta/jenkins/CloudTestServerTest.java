@@ -25,12 +25,12 @@ public class CloudTestServerTest extends HudsonTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        aServer = new CloudTestServer("http://testdrive.soasta.com/", "abc", Secret.fromString("def"), "utest", "Unit Test Server");
+        aServer = new CloudTestServer("http://experimental.soasta.com/", "Anonymous", Secret.fromString("password"), "utest", "Unit Test Server");
     }
 
     public void testValidate() throws Exception {
         FormValidation f = aServer.validate();
-        assertThat(f.kind, is(Kind.ERROR));
+        assertThat(f.kind, is(Kind.OK));
 
 //        f = new CloudTestServer("http://testdrive.soasta.com/", "abc", Secret.fromString("def")).validate();
 //        assertThat(f.kind, is(Kind.OK));
