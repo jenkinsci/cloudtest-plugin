@@ -15,12 +15,12 @@ import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -55,12 +55,16 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
      * URL like "http://touchtestlite.soasta.com/concerto/"
      */
     private final String url;
+    
+    private static final int CONNECTION_TIMEOUT = Integer.parseInt(System.getProperty("com.soasta.Jenkins.ConnectionTimeout", "15000"));
 
     private final String username;
     private final Secret password;
 
     private final String id;
     private final String name;
+    
+    private static final String REPOSITORY_SERVICE_BASE_URL = "/services/rest/RepositoryService/v1/Tokens";
 
     private transient boolean generatedIdOrName;
 
@@ -78,7 +82,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
                 url+="concerto/";
             this.url = url;
         }
-
+        
         if (username == null || username.isEmpty()) {
           this.username = "";
         }
@@ -172,27 +176,34 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     public FormValidation validate() throws IOException {
         HttpClient hc = createClient();
 
-        PostMethod post = new PostMethod(url + "Login");
-        post.addParameter("userName",getUsername());
+        // to validate the credentials we will request a token from the repository. 
         
-        if (getPassword() != null) {
-          post.addParameter("password",getPassword().getPlainText());
-        } else {
-          post.addParameter("password","");
+        JSONObject obj =  new JSONObject();
+        obj.put("userName", username);
+        obj.put("password", password.getPlainText());
+        
+        PutMethod put = new PutMethod(url + REPOSITORY_SERVICE_BASE_URL);
+        
+        StringRequestEntity requestEntity = new StringRequestEntity(
+          obj.toString(),
+          "application/json",
+          "UTF-8");
+        
+        put.setRequestEntity(requestEntity);
+        int statusCode = hc.executeMethod(put);
+        LOGGER.info("Status code got back for URL: " + (url + REPOSITORY_SERVICE_BASE_URL) + " STATUS : " + statusCode );
+        
+        switch (statusCode)
+        {
+            case 200:
+              return FormValidation.ok("Success!");
+            case 404:
+              return FormValidation.error("[404] Could not find the server");
+            case 401:
+              return FormValidation.error("[401] Invalid Credentials");
+            default: 
+              return FormValidation.error("Unknown error, Http Code " + statusCode);
         }
-
-        hc.executeMethod(post);
-
-        // if the login succeeds, we'll see a redirect
-        Header loc = post.getResponseHeader("Location");
-        if (loc!=null && loc.getValue().endsWith("/Central"))
-            return FormValidation.ok("Success!");
-
-        if (!post.getResponseBodyAsString().contains("SOASTA"))
-            return FormValidation.error(getUrl()+" doesn't look like a CloudTest server");
-
-        // if it fails, the server responds with 200!
-        return FormValidation.error("Invalid credentials.");
     }
 
     /**
@@ -251,11 +262,19 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
           this.getDescriptor().getDisplayName() + "\': <" + url + ">.");
     }
 
-    private HttpClient createClient() {
+    private HttpClient createClient() throws IOException {
         HttpClient hc = new HttpClient();
+        
+        hc.getParams().setParameter("http.socket.timeout", CONNECTION_TIMEOUT);
+        hc.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT);
+        // get the actual host name to compare in the proxy checker.
+        String host = new URL(url).getHost();
+        
         Jenkins j = Jenkins.getInstance();
         ProxyConfiguration jpc = j!=null ? j.proxy : null;
-        if(jpc != null) {
+        
+        if(jpc != null && jpc.name != null && ProxyChecker.useProxy(host, jpc)) 
+        {
             hc.getHostConfiguration().setProxy(jpc.name, jpc.port);
             if(jpc.getUserName() != null)
                 hc.getState().setProxyCredentials(AuthScope.ANY,new UsernamePasswordCredentials(jpc.getUserName(),jpc.getPassword()));

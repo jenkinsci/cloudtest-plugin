@@ -38,6 +38,14 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
+  
+  <dependencies>
+  	<dependency>
+	    <groupId>org.jenkins-ci.plugins</groupId>
+	    <artifactId>junit</artifactId>
+	    <version>1.5</version>
+    </dependency>
+  </dependencies>
 
   <pluginRepositories>
     <pluginRepository>

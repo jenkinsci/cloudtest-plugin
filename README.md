@@ -7,12 +7,17 @@ The CloudTest Jenkins plugin provides the ability to:
 * play CloudTest compositions and include the output in the build's test results
 
 ### Pre-requisites
-The CloudTest plug-in requires Jenkins 1.447 or later.
+The CloudTest plug-in requires Jenkins 1.580.1 or later.
+
+### Future development on the plugin
+* mvn hpi:run -Djetty.port=8081
 
 ### Global Configuration Options
 
 Before using the plug-in, you will need to provide the CloudTest server information, in the "Manage Jenkins" -&gt; "Configure System" page.
 This includes the CloudTest URL and a set of credentials.  _We recommend creating a dedicated CloudTest account for Jenkins to use._
+
+If you wish to deploy CloudTest test environments we also suggest you setup a CloudTest Server that points to CloudTest Manager, at https://cloudtestmanager.soasta.com/concerto/ . You will not need to create a dedicated CTM account, the Jenkins plugin will not log you out. 
 
 The CloudTest password is encrypted before saving it to disk.  It is also masked (e.g. "\*\*\*\*") in all output generated during builds.
 
@@ -28,6 +33,28 @@ Silently installs an IPA file on one or more attached iOS devices.  This ensures
 
 ##### Play Composition
 Executes a CloudTest composition, and saves the output in the build's test results.  You can include this build step multiple times if there are multiple compositions in your test suite.
+
+##### Start Grid
+Starts the grid with the specified CloudTest server, and name, and ensures that the object reaches a ready status. In the event that the grid fails to reach a ready status, it will be torn down and the build step will fail. 
+
+##### Stop Grid
+Terminates the grid, and ensures that the grid reaches a terminated status. In the event that the grid fails to reach a terminated status, the build step will fail.
+
+##### Start RSDB
+Starts the RSDB with the specified CloudTest server, and name, and ensures that the RSDB reaches a ready status. In the event that the RSDB fails to reach a ready status, it will be torn down and the build step will fail. 
+
+##### Stop RSDB
+Terminates the RSDB, and ensures that the RSDB reaches a terminated status. In the event that the grid fails to reach a terminated status, the build step will fail.  
+
+##### Test Environments 
+Note that for test environments you will need to set up a CloudTest Server to point to CloudTest Manager https://cloudtestmanager.soasta.com/concerto/.  
+
+##### Start Test Environment
+Starts the test environment with the specified CloudTest server (Note this MUST be CTM), and name, and ensures that the object reaches a ready status. In the event that the test environment fails to reach a ready status, it will be torn down and the build step will fail. 
+
+##### Stop Test Environment
+Terminates the test environment, and ensures that the test environment reaches a terminated status. In the event that the test environment fails to reach a terminated status, the build step will fail.
+
 
 ##### Wake Up iOS Device
 Wakes up one or more attached iOS devices, and opens Mobile Safari to the most recently-viewed page (e.g. TouchTest Agent).  This can optionally be used at the beginning of a build, to "prep" the devices for testing.  _NOTE: there is no Android version of this build step, because the Android SDK already provides this functionality._
