@@ -21,7 +21,10 @@ f.entry(title:"User Name",field:"username") {
 f.entry(title:"Password",field:"password") {
     f.password()
 }
-f.validateButton(method:"validate",with:"url,username,password,id,name",title:"Test Connection")
+f.entry(title:"API Token",field:"apitoken") {
+    f.textbox()
+}
+f.validateButton(method:"validate",with:"url,username,password,id,name,apitoken",title:"Test Connection")
 f.entry {
     div(align:"right") {
         input(type:"button",value:"Add",class:"repeatable-add")
