@@ -27,9 +27,16 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
+import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import jenkins.model.Jenkins;
 
@@ -37,6 +44,9 @@ import org.apache.commons.io.input.CountingInputStream;
 import org.apache.tools.zip.ZipEntry;
 import org.apache.tools.zip.ZipFile;
 import org.jenkinsci.remoting.RoleChecker;
+
+import com.soasta.jenkins.httpclient.GenericSelfClosingHttpClient;
+import com.soasta.jenkins.httpclient.HttpClientSettings;
 /*******************************************************************************************************************************
  * END (Jenkins User-Agent change related imports)
  *******************************************************************************************************************************/
@@ -47,6 +57,23 @@ public class CommonInstaller extends DownloadFromUrlInstaller
   private final VersionNumber buildNumber;
   private final Installers installerType;
 
+  /* Uncomment to test on localhost */
+  /*
+  static {
+    //for localhost testing only
+    javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
+    new javax.net.ssl.HostnameVerifier(){
+
+        public boolean verify(String hostname,
+                javax.net.ssl.SSLSession sslSession) {
+            if (hostname.equals("localhost")) {
+                return true;
+            }
+            return false;
+        }
+    });
+  } */
+  
   private CommonInstaller(CloudTestServer server, Installers installerType, VersionNumber buildNumber) {
       super(installerType.getCTInstallerType()+buildNumber);
       this.server = server;
@@ -178,9 +205,56 @@ public class CommonInstaller extends DownloadFromUrlInstaller
           FilePath timestamp = expected.child(".timestamp");
           URLConnection con;
           try {
+              
               con = ProxyConfiguration.open(archive);
               // Jira Bug JENKINS-21033: Changing the User-Agent from "Java/<Java version #>" to "Jenkins/<Jenkins version #>"
               con.setRequestProperty("User-Agent", "Jenkins/" + Jenkins.getVersion().toString());
+              
+              // requested connection is HTTPS. 
+              if (con instanceof HttpsURLConnection)
+              {
+                HttpsURLConnection https = ((HttpsURLConnection) con);
+                CloudTestServer server = getServer();
+                HttpClientSettings settings = new HttpClientSettings()
+                                              .setKeyStore(HttpClientSettings.loadKeyStore(server.getKeyStoreLocation(), server.getKeyStorePassword().getPlainText()))
+                                              .setKeyStorePassword(server.getKeyStorePassword().getPlainText())
+                                              .setTrustSelfSigned(server.isTrustSelfSigned());
+                
+                KeyManager[] keyManagers = GenericSelfClosingHttpClient.getKeyManagers(settings);
+                TrustManager[] trustManagers = null;
+                if (server.isTrustSelfSigned())
+                {
+                  trustManagers = new TrustManager[]
+                    {
+                      new X509TrustManager() 
+                      {
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() 
+                        {
+                          return new X509Certificate[] {};
+                        }
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) 
+                        {
+                        }
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType)
+                        {
+                        }
+                      }
+                    }; 
+                }
+                
+                SSLContext sslContext = null;
+                
+                try
+                {
+                  sslContext = SSLContext.getInstance("TLS");
+                  sslContext.init(keyManagers, trustManagers, new java.security.SecureRandom());
+                  https.setSSLSocketFactory(sslContext.getSocketFactory());
+                }
+                catch (Exception e)
+                {
+                  LOGGER.log(Level.SEVERE, "Error setting ssl context", e);
+                }
+              }
               LOGGER.log(Level.INFO, "Setting User-Agent for download to " + con.getRequestProperty("User-Agent") +
                 " for file " + archive.getPath());
               if (timestamp.exists()) {

@@ -6,7 +6,6 @@ package com.soasta.jenkins;
 
 import hudson.CopyOnWrite;
 import hudson.Extension;
-import hudson.ProxyConfiguration;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
@@ -15,26 +14,28 @@ import hudson.util.VersionNumber;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PutMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import com.soasta.jenkins.httpclient.GenericSelfClosingHttpClient;
+import com.soasta.jenkins.httpclient.HttpClientSettings;
+import com.soasta.jenkins.httpclient.HttpException;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -42,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -65,14 +65,21 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
     private final String id;
     private final String name;
+    private final String keyStoreLocation;
+    private final Secret keyStorePassword;
+    private final boolean trustSelfSigned;
     
     private static final String REPOSITORY_SERVICE_BASE_URL = "/services/rest/RepositoryService/v1/Tokens";
 
     private transient boolean generatedIdOrName;
     
     @DataBoundConstructor
-    public CloudTestServer(String url, String username, Secret password, String id, String name, String apitoken) throws MalformedURLException {
-        if (url == null || url.isEmpty()) {
+    public CloudTestServer(String url, String username, Secret password, String id, String name, String apitoken, String keyStoreLocation, Secret keyStorePassword, boolean trustSelfSigned) throws MalformedURLException {
+        
+      this.keyStoreLocation = keyStoreLocation;
+      this.keyStorePassword = keyStorePassword;
+      this.trustSelfSigned = trustSelfSigned;
+      if (url == null || url.isEmpty()) {
             // This is not really a valid case, but we have to store something.
             this.url = null;
         }
@@ -156,6 +163,21 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         return id;
     }
 
+    public String getKeyStoreLocation()
+    {
+      return keyStoreLocation;
+    }
+
+    public Secret getKeyStorePassword()
+    {
+      return keyStorePassword;
+    }
+
+    public boolean isTrustSelfSigned()
+    {
+      return trustSelfSigned;
+    }
+
     public String getName() {
         return name;
     }
@@ -183,11 +205,11 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         // and write the auto-generated values to disk, so this logic
         // should only execute once.  See DescriptorImpl constructor.
         LOGGER.info("Re-creating object to generate a new server ID and name.");
-        return new CloudTestServer(url, username, password, id, name, apitoken);
+        return new CloudTestServer(url, username, password, id, name, apitoken, keyStoreLocation, keyStorePassword, trustSelfSigned);
     }
 
     public FormValidation validate() throws IOException {
-        HttpClient hc = createClient();
+       GenericSelfClosingHttpClient client = createClient();
 
         // to validate the credentials we will request a token from the repository. 
         
@@ -204,28 +226,20 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
                obj.put("apiToken", apitoken);
         }
         
-        PutMethod put = new PutMethod(url + REPOSITORY_SERVICE_BASE_URL);
-        
-        StringRequestEntity requestEntity = new StringRequestEntity(
-          obj.toString(),
-          "application/json",
-          "UTF-8");
-        
-        put.setRequestEntity(requestEntity);
-        int statusCode = hc.executeMethod(put);
-        LOGGER.info("Status code got back for URL: " + (url + REPOSITORY_SERVICE_BASE_URL) + " STATUS : " + statusCode );
-        
-        switch (statusCode)
+        HttpPut put = new HttpPut(url + REPOSITORY_SERVICE_BASE_URL);
+        StringEntity jsonEntity = new StringEntity(obj.toString(), "UTF-8");
+        jsonEntity.setContentType("application/json");
+        put.setEntity(jsonEntity);
+      
+        try
         {
-            case 200:
-              return FormValidation.ok("Success!");
-            case 404:
-              return FormValidation.error("[404] Could not find the server");
-            case 401:
-              return FormValidation.error("[401] Invalid Credentials");
-            default: 
-              return FormValidation.error("Unknown error, Http Code " + statusCode);
+          client.sendRequest(put); 
+          return FormValidation.ok("Success!");
         }
+        catch (HttpException e)
+        {
+          return FormValidation.error(e.toString());
+        }  
     }
 
     /**
@@ -238,74 +252,57 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             // Nothing we can do.
             throw new IllegalStateException("No URL has been configured for this CloudTest server.");
         }
-
-        final String[] v = new String[1];
+        final String version[] =  new String[1];
         try {
-            HttpClient hc = createClient();
+            GenericSelfClosingHttpClient client = createClient();
             
-            GetMethod get = new GetMethod(url);
-            hc.executeMethod(get);
+            HttpGet get = new HttpGet(url);
+            String responseBody = client.sendRequest(get);
             
-            if (get.getStatusCode() != 200) {
-                throw new IOException(get.getStatusLine().toString());
+            if (responseBody != null) {
+              InputStream is = new ByteArrayInputStream(responseBody.getBytes());
+              SAXParser sp = SAXParserFactory.newInstance().newSAXParser();
+              sp.parse(is, new DefaultHandler() {
+                  @Override
+                  public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
+                      if (systemId.endsWith(".dtd"))
+                          return new InputSource(new StringReader(""));
+                      return null;
+                  }
+
+                  @Override
+                  public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+                      if (qName.equals("meta")) {
+                          if ("buildnumber".equals(attributes.getValue("name"))) {
+                              version[0] = attributes.getValue("content");
+                              throw new SAXException("found");
+                          }
+                      }
+                  }
+              });
+            } 
+        } catch (Exception e) {
+          if (e instanceof SAXException)
+          {
+            if (e.getMessage().equals("found"))
+            {
+              return new VersionNumber(version[0]);
             }
-
-            SAXParser sp = SAXParserFactory.newInstance().newSAXParser();
-            sp.parse(get.getResponseBodyAsStream(), new DefaultHandler() {
-                @Override
-                public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
-                    if (systemId.endsWith(".dtd"))
-                        return new InputSource(new StringReader(""));
-                    return null;
-                }
-
-                @Override
-                public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-                    if (qName.equals("meta")) {
-                        if ("buildnumber".equals(attributes.getValue("name"))) {
-                            v[0] = attributes.getValue("content");
-                            throw new SAXException("found");
-                        }
-                    }
-                }
-            });
-            LOGGER.warning("Build number not found in " + url);
-        } catch (SAXException e) {
-            if (v[0] != null)
-                return new VersionNumber(v[0]);
-
-            LOGGER.log(Level.WARNING, "Failed to load " + url, e);
-        } catch (ParserConfigurationException e) {
-            throw new Error(e);
-        }
-
-        // If we reach this point, then we failed to extract the build number.
-        throw new IOException("Failed to extract build number from \'" +
-          this.getDescriptor().getDisplayName() + "\': <" + url + ">.");
+          }
+          
+          throw new IOException("Failed to extract build number from \'" +
+            this.getDescriptor().getDisplayName() + "\': <" + url + ">."); 
+        } 
+        throw new Error("failed to find build number");
     }
 
-    private HttpClient createClient() throws IOException {
-        HttpClient hc = new HttpClient();
+    private GenericSelfClosingHttpClient createClient() {
         
-        hc.getParams().setParameter("http.socket.timeout", CONNECTION_TIMEOUT);
-        hc.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT);
-        // get the actual host name to compare in the proxy checker.
-        String host = new URL(url).getHost();
-        
-        Jenkins j = Jenkins.getInstance();
-        ProxyConfiguration jpc = j!=null ? j.proxy : null;
-        
-        if(jpc != null && jpc.name != null && ProxyChecker.useProxy(host, jpc)) 
-        {
-            hc.getHostConfiguration().setProxy(jpc.name, jpc.port);
-            if(jpc.getUserName() != null)
-                hc.getState().setProxyCredentials(AuthScope.ANY,new UsernamePasswordCredentials(jpc.getUserName(),jpc.getPassword()));
-        }
-        
-        // CloudTest servers will reject the default Java user agent.
-        hc.getParams().setParameter(HttpMethodParams.USER_AGENT, "Jenkins/" + Jenkins.getVersion().toString());
-        
-        return hc;
+        return new GenericSelfClosingHttpClient(new HttpClientSettings()
+                                                .setKeyStore(HttpClientSettings.loadKeyStore(keyStoreLocation, keyStorePassword.getPlainText()))
+                                                .setKeyStorePassword(keyStorePassword.getPlainText())
+                                                .setUrl(url)
+                                                .setTrustSelfSigned(trustSelfSigned)); 
     }
 
     public static CloudTestServer getByURL(String url) {
@@ -381,8 +378,9 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             return true;
         }
 
-        public FormValidation doValidate(@QueryParameter String url, @QueryParameter String username, @QueryParameter String password, @QueryParameter String id, @QueryParameter String name, @QueryParameter String apitoken) throws IOException {
-            return new CloudTestServer(url,username,Secret.fromString(password), id, name, apitoken).validate();
+        public FormValidation doValidate(@QueryParameter String url, @QueryParameter String username, @QueryParameter String password, @QueryParameter String id, @QueryParameter String name, @QueryParameter String apitoken,
+          @QueryParameter String keyStoreLocation, @QueryParameter String keyStorePassword, @QueryParameter boolean trustSelfSigned) throws IOException {
+            return new CloudTestServer(url,username,Secret.fromString(password), id, name, apitoken, keyStoreLocation, Secret.fromString(keyStorePassword), trustSelfSigned).validate();
         }
 
         public FormValidation doCheckName(@QueryParameter String value) {

@@ -65,6 +65,10 @@ public abstract class AbstractSCommandBuilder extends Builder {
           args.addMasked("password=" + s.getPassword());
       else if(!s.getApitoken().trim().isEmpty() && (!s.getUsername().trim().isEmpty() || s.getPassword() != null))
           throw new AbortException("Cannot set both Username or Password and API Token");
+      else if (s.getKeyStoreLocation() != null)
+          args.add("keystore=" + s.getKeyStoreLocation());
+      else if (s.getKeyStorePassword() != null)
+          args.addMasked("keystorepass=" + s.getKeyStorePassword());
       
       ProxyConfiguration proxyConfig = Jenkins.getInstance().proxy;
 
