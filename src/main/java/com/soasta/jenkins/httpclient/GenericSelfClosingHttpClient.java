@@ -13,17 +13,12 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
@@ -31,6 +26,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.util.EntityUtils;
@@ -44,10 +40,21 @@ public class GenericSelfClosingHttpClient
 {
   private static Logger m_log = Logger.getLogger(GenericSelfClosingHttpClient.class.getName());
   private CloseableHttpClient m_client; 
+  private boolean m_closeAfterUse = true;
   
+  /**
+   * HttpClient designed to be used for only one HttpCall.
+   * @param settings
+   */
   public GenericSelfClosingHttpClient(HttpClientSettings settings)
   {
     buildClient(settings);
+  }
+  
+  public GenericSelfClosingHttpClient(HttpClientSettings settings, boolean closeAfterUse)
+  {
+    buildClient(settings);
+    this.m_closeAfterUse = closeAfterUse;
   }
   
   public GenericSelfClosingHttpClient(CloseableHttpClient client)
@@ -57,21 +64,32 @@ public class GenericSelfClosingHttpClient
   
   public String sendRequest(HttpUriRequest httpRequest) throws IOException
   {
+    // Jira Bug JENKINS-21033: Changing the User-Agent from "Java/<Java version #>" to "Jenkins/<Jenkins version #>"
     httpRequest.addHeader("User-Agent", "Jenkins/" + Jenkins.getVersion().toString());
     HttpResponse httpResponse = m_client.execute(httpRequest);
     try
     {
-      int statusCode = httpResponse.getStatusLine().getStatusCode();
-      
-      
-      String responseBody = httpResponse.getEntity() == null ? null : EntityUtils.toString(httpResponse.getEntity(), getDefaultResponseCharacterSet());
-      
-      return processResponse(httpResponse, statusCode, responseBody);
+      try
+      {
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
+        
+        
+        String responseBody = httpResponse.getEntity() == null ? null : EntityUtils.toString(httpResponse.getEntity(), getDefaultResponseCharacterSet());
+        
+        return processResponse(httpResponse, statusCode, responseBody);
+      }
+      finally
+      {
+        // Make sure the connection can be returned to the pool.
+        EntityUtils.consume(httpResponse.getEntity());
+      }
     }
     finally
     {
-      // Make sure the connection can be returned to the pool.
-      EntityUtils.consume(httpResponse.getEntity());
+      if (m_closeAfterUse)
+      {
+        m_client.close();
+      }
     }
   }
   
@@ -97,6 +115,11 @@ public class GenericSelfClosingHttpClient
     }
   }
   
+  public void close() throws IOException
+  {
+    m_client.close();
+  }
+  
   private void buildClient(HttpClientSettings settings)
   {
     HttpClientBuilder builder = HttpClientBuilder.create();
@@ -120,8 +143,7 @@ public class GenericSelfClosingHttpClient
       builder.setSSLSocketFactory(sslConnectionFactory);
       schemeRegistryBuilder.register("https", sslConnectionFactory);
       
-      PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(schemeRegistryBuilder.build(),SystemDefaultDnsResolver.INSTANCE);
-      connectionManager.setDefaultMaxPerRoute(Integer.MAX_VALUE);
+      BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(schemeRegistryBuilder.build());
       builder.setConnectionManager(connectionManager);
     }
     catch (Exception e)

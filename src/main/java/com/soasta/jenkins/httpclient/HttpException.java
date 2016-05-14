@@ -14,7 +14,7 @@ public class HttpException extends RuntimeException
   }
   
   @Override
-  public String toString()
+  public String getMessage()
   {
     return "HTTP Request Failed. Code [" + m_statusCode + "] . Message [" + getBody() +"]";
   }

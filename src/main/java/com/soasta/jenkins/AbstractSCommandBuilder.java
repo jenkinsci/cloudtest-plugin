@@ -6,7 +6,6 @@ package com.soasta.jenkins;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 import hudson.AbortException;
@@ -58,18 +57,29 @@ public abstract class AbstractSCommandBuilder extends Builder {
       args.add("url=" + s.getUrl());
       
       if(!s.getApitoken().trim().isEmpty() && s.getUsername().trim().isEmpty() && s.getPassword() == null)
-          args.add("apitoken=" + s.getApitoken());
-      else if(s.getApitoken().trim().isEmpty() && !s.getUsername().trim().isEmpty()) 
-          args.add("username="+s.getUsername());
-      else if(s.getApitoken().trim().isEmpty() && s.getPassword() !=null)
-          args.addMasked("password=" + s.getPassword());
+      {
+        args.add("apitoken=" + s.getApitoken());
+      }
       else if(!s.getApitoken().trim().isEmpty() && (!s.getUsername().trim().isEmpty() || s.getPassword() != null))
-          throw new AbortException("Cannot set both Username or Password and API Token");
-      else if (s.getKeyStoreLocation() != null)
-          args.add("keystore=" + s.getKeyStoreLocation());
-      else if (s.getKeyStorePassword() != null)
-          args.addMasked("keystorepass=" + s.getKeyStorePassword());
+      {
+        throw new AbortException("Cannot set both Username or Password and API Token");
+      }
+      else if(s.getApitoken().trim().isEmpty() && !s.getUsername().trim().isEmpty()) 
+      {
+        args.add("username="+s.getUsername());
+        args.addMasked("password=" + s.getPassword());
+      }
       
+      if (s.getKeyStoreLocation() != null && !s.getKeyStoreLocation().isEmpty()) 
+      {
+        args.add("keystore=" + s.getKeyStoreLocation());
+        
+        if (s.getKeyStorePassword() != null)
+        {
+          args.addMasked("keystorepass=" + s.getKeyStorePassword());
+        }
+      }
+         
       ProxyConfiguration proxyConfig = Jenkins.getInstance().proxy;
 
       if (proxyConfig != null && proxyConfig.name != null) {

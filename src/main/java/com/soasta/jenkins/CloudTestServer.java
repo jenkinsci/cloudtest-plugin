@@ -17,33 +17,26 @@ import net.sf.json.JSONObject;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
+import org.jsoup.Jsoup;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
 import com.soasta.jenkins.httpclient.GenericSelfClosingHttpClient;
 import com.soasta.jenkins.httpclient.HttpClientSettings;
-import com.soasta.jenkins.httpclient.HttpException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 /**
  * Information about a specific CloudTest Server and access credential.
@@ -55,8 +48,6 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
      * URL like "http://touchtestlite.soasta.com/concerto/"
      */
     private final String url;
-    
-    private static final int CONNECTION_TIMEOUT = Integer.parseInt(System.getProperty("com.soasta.Jenkins.ConnectionTimeout", "15000"));
 
     private final String apitoken;
     
@@ -209,7 +200,9 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     }
 
     public FormValidation validate() throws IOException {
-       GenericSelfClosingHttpClient client = createClient();
+      try
+      {
+        GenericSelfClosingHttpClient client = createClient();
 
         // to validate the credentials we will request a token from the repository. 
         
@@ -230,16 +223,14 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         StringEntity jsonEntity = new StringEntity(obj.toString(), "UTF-8");
         jsonEntity.setContentType("application/json");
         put.setEntity(jsonEntity);
-      
-        try
-        {
-          client.sendRequest(put); 
-          return FormValidation.ok("Success!");
-        }
-        catch (HttpException e)
-        {
-          return FormValidation.error(e.toString());
-        }  
+        client.sendRequest(put); 
+        return FormValidation.ok("Success!");
+      }
+      catch (Exception e)
+      {
+        LOGGER.log(Level.SEVERE, "Failed to valdiate",  e);
+        return FormValidation.error(e.getMessage());
+      } 
     }
 
     /**
@@ -252,47 +243,25 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
             // Nothing we can do.
             throw new IllegalStateException("No URL has been configured for this CloudTest server.");
         }
-        final String version[] =  new String[1];
-        try {
-            GenericSelfClosingHttpClient client = createClient();
-            
-            HttpGet get = new HttpGet(url);
-            String responseBody = client.sendRequest(get);
-            
-            if (responseBody != null) {
-              InputStream is = new ByteArrayInputStream(responseBody.getBytes());
-              SAXParser sp = SAXParserFactory.newInstance().newSAXParser();
-              sp.parse(is, new DefaultHandler() {
-                  @Override
-                  public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
-                      if (systemId.endsWith(".dtd"))
-                          return new InputSource(new StringReader(""));
-                      return null;
-                  }
+     
 
-                  @Override
-                  public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-                      if (qName.equals("meta")) {
-                          if ("buildnumber".equals(attributes.getValue("name"))) {
-                              version[0] = attributes.getValue("content");
-                              throw new SAXException("found");
-                          }
-                      }
-                  }
-              });
-            } 
-        } catch (Exception e) {
-          if (e instanceof SAXException)
-          {
-            if (e.getMessage().equals("found"))
-            {
-              return new VersionNumber(version[0]);
-            }
-          }
+        GenericSelfClosingHttpClient client = createClient();
+        
+        HttpGet get = new HttpGet(url);
+        String responseBody = client.sendRequest(get);
+        
+        Document doc = Jsoup.parse(responseBody);
+        Elements elements = doc.select("meta[name=buildnumber]");
+        
+        if (elements != null && elements.size() >= 1)
+        {
+          String buildNumber = elements.get(0).attr("content");
           
-          throw new IOException("Failed to extract build number from \'" +
-            this.getDescriptor().getDisplayName() + "\': <" + url + ">."); 
-        } 
+          if (buildNumber != null)
+          {
+            return new VersionNumber(buildNumber);
+          }  
+        }
         throw new Error("failed to find build number");
     }
 
@@ -300,7 +269,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         
         return new GenericSelfClosingHttpClient(new HttpClientSettings()
                                                 .setKeyStore(HttpClientSettings.loadKeyStore(keyStoreLocation, keyStorePassword.getPlainText()))
-                                                .setKeyStorePassword(keyStorePassword.getPlainText())
+                                                .setKeyStorePassword(keyStorePassword == null || keyStorePassword.getPlainText().isEmpty() ?  null : keyStorePassword.getPlainText())
                                                 .setUrl(url)
                                                 .setTrustSelfSigned(trustSelfSigned)); 
     }

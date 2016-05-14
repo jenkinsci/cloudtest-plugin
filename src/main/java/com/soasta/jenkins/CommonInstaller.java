@@ -58,7 +58,7 @@ public class CommonInstaller extends DownloadFromUrlInstaller
   private final Installers installerType;
 
   /* Uncomment to test on localhost */
-  /*
+  
   static {
     //for localhost testing only
     javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
@@ -72,7 +72,7 @@ public class CommonInstaller extends DownloadFromUrlInstaller
             return false;
         }
     });
-  } */
+  } 
   
   private CommonInstaller(CloudTestServer server, Installers installerType, VersionNumber buildNumber) {
       super(installerType.getCTInstallerType()+buildNumber);
@@ -215,8 +215,9 @@ public class CommonInstaller extends DownloadFromUrlInstaller
               {
                 HttpsURLConnection https = ((HttpsURLConnection) con);
                 CloudTestServer server = getServer();
+                String password = server.getKeyStorePassword().getPlainText() == null || server.getKeyStorePassword().getPlainText().isEmpty() ? null : server.getKeyStorePassword().getPlainText();
                 HttpClientSettings settings = new HttpClientSettings()
-                                              .setKeyStore(HttpClientSettings.loadKeyStore(server.getKeyStoreLocation(), server.getKeyStorePassword().getPlainText()))
+                                              .setKeyStore(HttpClientSettings.loadKeyStore(server.getKeyStoreLocation(), password))
                                               .setKeyStorePassword(server.getKeyStorePassword().getPlainText())
                                               .setTrustSelfSigned(server.isTrustSelfSigned());
                 
