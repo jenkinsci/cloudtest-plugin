@@ -6,7 +6,6 @@ package com.soasta.jenkins;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 import hudson.AbortException;
@@ -60,7 +59,17 @@ public abstract class AbstractSCommandBuilder extends Builder {
           
       if (s.getPassword() != null)
           args.addMasked("password=" + s.getPassword());
-      
+     
+      if (s.getKeyStoreLocation() != null && !s.getKeyStoreLocation().isEmpty()) 
+      {
+        args.add("keystore=" + s.getKeyStoreLocation());
+        
+        if (s.getKeyStorePassword() != null)
+        {
+          args.addMasked("keystorepass=" + s.getKeyStorePassword());
+        }
+      }
+         
       ProxyConfiguration proxyConfig = Jenkins.getInstance().proxy;
 
       if (proxyConfig != null && proxyConfig.name != null) {
