@@ -58,7 +58,7 @@ public class CommonInstaller extends DownloadFromUrlInstaller
   private final Installers installerType;
 
   /* Uncomment to test on localhost */
-  
+  /*
   static {
     //for localhost testing only
     javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(
@@ -72,7 +72,7 @@ public class CommonInstaller extends DownloadFromUrlInstaller
             return false;
         }
     });
-  } 
+  } */
   
   private CommonInstaller(CloudTestServer server, Installers installerType, VersionNumber buildNumber) {
       super(installerType.getCTInstallerType()+buildNumber);

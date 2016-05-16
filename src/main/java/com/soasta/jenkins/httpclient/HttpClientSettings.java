@@ -51,7 +51,7 @@ public class HttpClientSettings
       FileInputStream fis = new FileInputStream(path);
       try 
       {
-          ks.load(fis, password == null ? null : password.toCharArray());
+          ks.load(fis, password == null || password.isEmpty() ? null : password.toCharArray());
       }
       finally
       {

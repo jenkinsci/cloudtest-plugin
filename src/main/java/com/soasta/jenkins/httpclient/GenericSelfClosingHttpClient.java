@@ -181,7 +181,7 @@ public class GenericSelfClosingHttpClient
     try
     {
       KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-      keyManagerFactory.init(settings.getKeyStore(), settings.getKeyStorePassword() == null ? null : settings.getKeyStorePassword().toCharArray());
+      keyManagerFactory.init(settings.getKeyStore(), settings.getKeyStorePassword() == null || settings.getKeyStorePassword().isEmpty() ? null : settings.getKeyStorePassword().toCharArray());
       
       return keyManagerFactory.getKeyManagers();
     }
