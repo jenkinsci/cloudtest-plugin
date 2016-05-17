@@ -1,6 +1,8 @@
 package com.soasta.jenkins.httpclient;
 
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 
 public class HttpClientSettings
@@ -38,15 +40,15 @@ public class HttpClientSettings
     return this;
   }
   
-  public static KeyStore loadKeyStore(String path, String password) 
+  public static KeyStore loadKeyStore(String path, String password) throws IOException
   {
+    
+    if (path == null || path.isEmpty())
+    {
+      return null; // no keystore path specified. 
+    }
     try
     {
-      if (path == null || path.isEmpty())
-      {
-        return null; // no keystore path specified. 
-      }
-      
       KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
       FileInputStream fis = new FileInputStream(path);
       try 
@@ -59,7 +61,7 @@ public class HttpClientSettings
       }
       return ks;
     }
-    catch (Exception e)
+    catch (GeneralSecurityException e)
     {
       throw new RuntimeException(e);
     }

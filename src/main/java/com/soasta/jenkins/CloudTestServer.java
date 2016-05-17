@@ -265,7 +265,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         throw new Error("failed to find build number");
     }
 
-    private GenericSelfClosingHttpClient createClient() {
+    private GenericSelfClosingHttpClient createClient() throws IOException {
         
         return new GenericSelfClosingHttpClient(new HttpClientSettings()
                                                 .setKeyStore(HttpClientSettings.loadKeyStore(keyStoreLocation, keyStorePassword.getPlainText()))

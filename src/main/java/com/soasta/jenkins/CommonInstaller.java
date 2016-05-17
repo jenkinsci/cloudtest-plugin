@@ -225,22 +225,7 @@ public class CommonInstaller extends DownloadFromUrlInstaller
                 TrustManager[] trustManagers = null;
                 if (server.isTrustSelfSigned())
                 {
-                  trustManagers = new TrustManager[]
-                    {
-                      new X509TrustManager() 
-                      {
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() 
-                        {
-                          return new X509Certificate[] {};
-                        }
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) 
-                        {
-                        }
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType)
-                        {
-                        }
-                      }
-                    }; 
+                  trustManagers = GenericSelfClosingHttpClient.getTrustAllSelfSigned();
                 }
                 
                 SSLContext sslContext = null;
