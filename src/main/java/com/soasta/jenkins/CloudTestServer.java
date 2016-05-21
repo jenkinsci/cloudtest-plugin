@@ -213,7 +213,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
           obj.put("password", password.getPlainText());
         }
         else if(!apitoken.trim().isEmpty() && username.trim().isEmpty() && password == null) {
-            if(apitoken.length() != 32)
+            if(apitoken.length() != 36)
               throw new IOException("Invalid API Token");
             else
                obj.put("apiToken", apitoken);
