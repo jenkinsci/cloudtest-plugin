@@ -21,10 +21,25 @@ f.entry(title:"User Name",field:"username") {
 f.entry(title:"Password",field:"password") {
     f.password()
 }
-f.validateButton(method:"validate",with:"url,username,password,id,name",title:"Test Connection")
-f.entry {
-    div(align:"right") {
+
+f.advanced {
+    f.entry(title:"Full Path to Keystore",field:"keyStoreLocation") {
+        f.textbox()
+    }
+    f.entry(title:"Keystore password",field:"keyStorePassword") {
+        f.password()
+    }
+    f.entry(title:"Trust selfsigned",field:"trustSelfSigned") {
+        f.checkbox()
+    }
+}
+
+f.validateButton(method:"validate",with:"url,username,password,id,name,apitoken,keyStoreLocation,keyStorePassword,trustSelfSigned",title:"Test Connection") 
+    f.entry {
+        div(align:"right") {
         input(type:"button",value:"Add",class:"repeatable-add")
         input(type:"button",value:"Delete",class:"repeatable-delete")
     }
 }
+
+

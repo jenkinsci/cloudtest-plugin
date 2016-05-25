@@ -11,6 +11,7 @@ The CloudTest plug-in requires Jenkins 1.580.1 or later.
 
 ### Future development on the plugin
 * mvn hpi:run -Djetty.port=8081
+* To debug from eclipse: Select debug configs, create a new maven debug config. Add the goal clean hpi:run, and jetty.port=8081 under param values. 
 
 ### Global Configuration Options
 
