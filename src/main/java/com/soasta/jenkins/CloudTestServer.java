@@ -268,7 +268,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     private GenericSelfClosingHttpClient createClient() throws IOException {
         
         return new GenericSelfClosingHttpClient(new HttpClientSettings()
-                                                .setKeyStore(HttpClientSettings.loadKeyStore(keyStoreLocation, keyStorePassword.getPlainText()))
+                                                .setKeyStore(HttpClientSettings.loadKeyStore(keyStoreLocation, Secret.toString(keyStorePassword)))
                                                 .setKeyStorePassword(keyStorePassword == null || keyStorePassword.getPlainText().isEmpty() ?  null : keyStorePassword.getPlainText())
                                                 .setUrl(url)
                                                 .setTrustSelfSigned(trustSelfSigned)); 
