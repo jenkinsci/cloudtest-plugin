@@ -143,16 +143,25 @@ public class MakeAppTouchTestable extends Builder {
 
         FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
 
-        args.add(DEFAULT_JAVA_OPTION);
-        args.add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray());
+        args.add(DEFAULT_JAVA_OPTION)
+            .add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray())
+            .add("-jar")
+            .add(path.child("MakeAppTouchTestable.jar"))
+            .add("-overwriteapp");
 
-        args.add("-jar").add(path.child("MakeAppTouchTestable.jar"))
-            .add("-overwriteapp")
-            .add("-url").add(s.getUrl())
-            .add("-username",s.getUsername());
+        if(s.getApitoken() != null) {
+            args.add("-apitoken")
+                .add(s.getApitoken()); 
+        }
+        else {
+            args.add("-url").add(s.getUrl())
+                .add("-username",s.getUsername()); 
             
-        if (s.getPassword() != null)
-            args.add("-password").addMasked(s.getPassword().getPlainText());
+            if (s.getPassword() != null) {
+                args.add("-password")
+                    .addMasked(s.getPassword().getPlainText()); 
+            } 
+        }       
 
         args.add(inputType.getInputType(), envs.expand(projectFile));
         

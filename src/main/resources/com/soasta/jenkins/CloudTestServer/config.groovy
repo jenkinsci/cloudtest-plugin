@@ -21,6 +21,10 @@ f.entry(title:"User Name",field:"username") {
 f.entry(title:"Password",field:"password") {
     f.password()
 }
+f.entry(title:"API Token",field:"apitoken") {
+    f.textbox()
+}
+
 
 f.advanced {
     f.entry(title:"Full Path to Keystore",field:"keyStoreLocation") {

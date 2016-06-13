@@ -53,13 +53,23 @@ public abstract class AbstractSCommandBuilder extends Builder {
       FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
   
       ArgumentListBuilder args = new ArgumentListBuilder();
-      args.add(scommand)
-          .add("url=" + s.getUrl())
-          .add("username="+s.getUsername());
-          
-      if (s.getPassword() != null)
-          args.addMasked("password=" + s.getPassword());
-     
+      args.add(scommand);
+      args.add("url=" + s.getUrl());
+      
+      if(!s.getApitoken().trim().isEmpty() && s.getUsername().trim().isEmpty() && s.getPassword() == null)
+      {
+        args.add("apitoken=" + s.getApitoken());
+      }
+      else if(!s.getApitoken().trim().isEmpty() && (!s.getUsername().trim().isEmpty() || s.getPassword() != null))
+      {
+        throw new AbortException("Cannot set both Username or Password and API Token");
+      }
+      else if(s.getApitoken().trim().isEmpty() && !s.getUsername().trim().isEmpty()) 
+      {
+        args.add("username="+s.getUsername());
+        args.addMasked("password=" + s.getPassword());
+      }
+      
       if (s.getKeyStoreLocation() != null && !s.getKeyStoreLocation().isEmpty()) 
       {
         args.add("keystore=" + s.getKeyStoreLocation());

@@ -49,6 +49,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
      */
     private final String url;
 
+    private final String apitoken;
+    
     private final String username;
     private final Secret password;
 
@@ -61,9 +63,9 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     private static final String REPOSITORY_SERVICE_BASE_URL = "/services/rest/RepositoryService/v1/Tokens";
 
     private transient boolean generatedIdOrName;
-
+    
     @DataBoundConstructor
-    public CloudTestServer(String url, String username, Secret password, String id, String name, String keyStoreLocation, Secret keyStorePassword, boolean trustSelfSigned) throws MalformedURLException {
+    public CloudTestServer(String url, String username, Secret password, String id, String name, String apitoken, String keyStoreLocation, Secret keyStorePassword, boolean trustSelfSigned) throws MalformedURLException {
         
       this.keyStoreLocation = keyStoreLocation;
       this.keyStorePassword = keyStorePassword;
@@ -82,17 +84,24 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         }
         
         if (username == null || username.isEmpty()) {
-          this.username = "";
+            this.username = "";
         }
         else {
-          this.username = username;
+            this.username = username;
         }
         
         if (password == null || password.getPlainText() == null || password.getPlainText().isEmpty()) {
-          this.password = null;
+            this.password = null;
         }
         else {
-          this.password = password;
+            this.password = password;
+        }
+        
+        if (apitoken == null || apitoken.isEmpty()) {
+            this.apitoken = "";
+        }
+        else {
+            this.apitoken = apitoken;
         }
 
         // If the ID is empty, auto-generate one.
@@ -163,6 +172,10 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
     public String getName() {
         return name;
     }
+    
+    public String getApitoken() {
+        return apitoken;
+    }
 
     public Object readResolve() throws IOException {
         if (id != null &&
@@ -183,7 +196,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         // and write the auto-generated values to disk, so this logic
         // should only execute once.  See DescriptorImpl constructor.
         LOGGER.info("Re-creating object to generate a new server ID and name.");
-        return new CloudTestServer(url, username, password, id, name, keyStoreLocation, keyStorePassword, trustSelfSigned);
+        return new CloudTestServer(url, username, password, id, name, apitoken, keyStoreLocation, keyStorePassword, trustSelfSigned);
     }
 
     public FormValidation validate() throws IOException {
@@ -194,8 +207,17 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         // to validate the credentials we will request a token from the repository. 
         
         JSONObject obj =  new JSONObject();
-        obj.put("userName", username);
-        obj.put("password", password.getPlainText());
+        
+        if(apitoken.trim().isEmpty() && !username.trim().isEmpty() && password != null) {
+          obj.put("userName", username);
+          obj.put("password", password.getPlainText());
+        }
+        else if(!apitoken.trim().isEmpty() && username.trim().isEmpty() && password == null) {
+            if(apitoken.length() != 36)
+              throw new IOException("Invalid API Token");
+            else
+               obj.put("apiToken", apitoken);
+        }
         
         HttpPut put = new HttpPut(url + REPOSITORY_SERVICE_BASE_URL);
         StringEntity jsonEntity = new StringEntity(obj.toString(), "UTF-8");
@@ -281,6 +303,8 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         @CopyOnWrite
         private volatile List<CloudTestServer> servers;
+        boolean setUsername;
+        boolean setApiToken;
 
         public DescriptorImpl() {
             load();
@@ -325,7 +349,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
 
         public FormValidation doValidate(@QueryParameter String url, @QueryParameter String username, @QueryParameter String password, @QueryParameter String id, @QueryParameter String name, @QueryParameter String apitoken,
           @QueryParameter String keyStoreLocation, @QueryParameter String keyStorePassword, @QueryParameter boolean trustSelfSigned) throws IOException {
-            return new CloudTestServer(url,username,Secret.fromString(password), id, name, keyStoreLocation, Secret.fromString(keyStorePassword), trustSelfSigned).validate();
+            return new CloudTestServer(url,username,Secret.fromString(password), id, name, apitoken, keyStoreLocation, Secret.fromString(keyStorePassword), trustSelfSigned).validate();
         }
 
         public FormValidation doCheckName(@QueryParameter String value) {
@@ -347,18 +371,52 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         }
 
         public FormValidation doCheckUsername(@QueryParameter String value) {
-            if (value == null || value.trim().isEmpty()) {
-                return FormValidation.error("Required.");
-            } else {
+            if(setApiToken == true && (value == null || value.trim().isEmpty())) {
+                setUsername = false;
                 return FormValidation.ok();
+            } else if(setApiToken == false && (value == null || value.trim().isEmpty())) {
+                setUsername = false;
+                return FormValidation.error("Username/Password or API Token Required.");
+            } else if(setApiToken == false && (value != null || !(value.trim().isEmpty()))) {
+                setUsername = true;
+                return FormValidation.ok();
+            } else {
+                setUsername = true;
+                return FormValidation.error("Cannot use both Username/Password and API Token");
             }
         }
 
         public FormValidation doCheckPassword(@QueryParameter String value) {
-            if (value == null || value.trim().isEmpty()) {
-                return FormValidation.error("Required.");
-            } else {
+            if(setApiToken == true && setUsername == false && (value == null || value.trim().isEmpty())) {
                 return FormValidation.ok();
+            } else if(setApiToken == false && setUsername == true && (value == null || value.trim().isEmpty())) {
+                return FormValidation.error("Password Required.");
+            } else if(setApiToken == false && setUsername == true && (value != null || !(value.trim().isEmpty()))) {
+                return FormValidation.ok();
+            } else if(setApiToken == false && setUsername == false) {
+                return FormValidation.ok();
+            } else {
+                return FormValidation.error("Cannot use both Username/Password and API Token");
+            }
+        }
+        
+        public FormValidation doCheckApitoken(@QueryParameter String value) {
+            if(setUsername == true && (value == null || value.trim().isEmpty())) {
+                setApiToken = false;
+                return FormValidation.ok();
+            } else if(setUsername == false && (value == null || value.trim().isEmpty())) {
+                setApiToken = false;
+                return FormValidation.error("Username/Password or API Token Required.");
+            } else if(setUsername == false && (value != null || !(value.trim().isEmpty()))) {
+                if(value.length() != 32)
+                  return FormValidation.error("Invalid API Token");
+                else {
+                    setApiToken = true;
+                    return FormValidation.ok();
+                }
+            } else {
+                setApiToken = true;
+                return FormValidation.error("Cannot use both Username/Password and API Token");
             }
         }
 
