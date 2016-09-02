@@ -56,26 +56,27 @@ public abstract class AbstractSCommandBuilder extends Builder {
       args.add(scommand);
       args.add("url=" + s.getUrl());
       
-      if(!s.getApitoken().trim().isEmpty() && s.getUsername().trim().isEmpty() && s.getPassword() == null)
-      {
+      boolean usingAPIToken = s.getApitoken() != null && !s.getApitoken().trim().isEmpty();
+      boolean usingUserNameAndPass = s.getUsername() != null && !s.getUsername().isEmpty(); // we validate that if they set username, they also set the password. 
+      
+      // what do they want to use? We want to alert the user to this. 
+      if (usingAPIToken && usingUserNameAndPass) {
+        throw new AbortException("Cannot set both Username or Password and API Token. Please either remove the API token, or userName and password.");
+      }
+     
+      if(usingAPIToken) {
         args.add("apitoken=" + s.getApitoken());
       }
-      else if(!s.getApitoken().trim().isEmpty() && (!s.getUsername().trim().isEmpty() || s.getPassword() != null))
-      {
-        throw new AbortException("Cannot set both Username or Password and API Token");
-      }
-      else if(s.getApitoken().trim().isEmpty() && !s.getUsername().trim().isEmpty()) 
-      {
+      else {
+        // default behavior. 
         args.add("username="+s.getUsername());
         args.addMasked("password=" + s.getPassword());
       }
       
-      if (s.getKeyStoreLocation() != null && !s.getKeyStoreLocation().isEmpty()) 
-      {
+      if (s.getKeyStoreLocation() != null && !s.getKeyStoreLocation().isEmpty()) {
         args.add("keystore=" + s.getKeyStoreLocation());
         
-        if (s.getKeyStorePassword() != null)
-        {
+        if (s.getKeyStorePassword() != null) {
           args.addMasked("keystorepass=" + s.getKeyStorePassword());
         }
       }
