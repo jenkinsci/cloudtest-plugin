@@ -147,15 +147,15 @@ public class MakeAppTouchTestable extends Builder {
             .add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray())
             .add("-jar")
             .add(path.child("MakeAppTouchTestable.jar"))
-            .add("-overwriteapp");
+            .add("-overwriteapp")
+            .add("-url").add(s.getUrl());
 
-        if(s.getApitoken() != null) {
+        if(s.getApitoken() != null && !s.getApitoken().isEmpty()) {
             args.add("-apitoken")
                 .add(s.getApitoken()); 
         }
         else {
-            args.add("-url").add(s.getUrl())
-                .add("-username",s.getUsername()); 
+            args.add("-username",s.getUsername()); 
             
             if (s.getPassword() != null) {
                 args.add("-password")
