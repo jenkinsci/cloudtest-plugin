@@ -408,7 +408,7 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
                 setApiToken = false;
                 return FormValidation.error("Username/Password or API Token Required.");
             } else if(setUsername == false && (value != null || !(value.trim().isEmpty()))) {
-                if(value.length() != 32)
+                if(value.length() != 36)
                   return FormValidation.error("Invalid API Token");
                 else {
                     setApiToken = true;

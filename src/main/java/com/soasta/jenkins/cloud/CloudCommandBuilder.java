@@ -80,11 +80,21 @@ public class CloudCommandBuilder {
       
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand)
-          .add("url=" + s.getUrl())
-          .add("username="+s.getUsername());
-          
-      if (s.getPassword() != null)
-          args.addMasked("password=" + s.getPassword());
+          .add("url=" + s.getUrl());
+
+      if(!s.getApitoken().trim().isEmpty() && s.getUsername().trim().isEmpty() && s.getPassword() == null)
+      {
+        args.add("apitoken=" + s.getApitoken());
+      }
+      else if(!s.getApitoken().trim().isEmpty() && (!s.getUsername().trim().isEmpty() || s.getPassword() != null))
+      {
+        throw new AbortException("Cannot set both Username or Password and API Token");
+      }
+      else if(s.getApitoken().trim().isEmpty() && !s.getUsername().trim().isEmpty())
+      {
+        args.add("username="+s.getUsername());
+        args.addMasked("password=" + s.getPassword());
+      }
       
       ProxyConfiguration proxyConfig = Jenkins.getInstance().proxy;
 
