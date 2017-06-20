@@ -52,6 +52,11 @@ public abstract class AbstractSCommandBuilder extends Builder {
       // Download SCommand, if needed.
       FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
   
+      return getSCommandArgs(scommand, s);
+    }
+    
+    
+    public static ArgumentListBuilder getSCommandArgs(FilePath scommand, CloudTestServer s) throws IOException {
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand);
       args.add("url=" + s.getUrl());
