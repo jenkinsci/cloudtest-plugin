@@ -3,12 +3,12 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.580.1</version><!-- which version of Jenkins is this plugin built against? -->
+    <version>3.39</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
   <groupId>com.soasta.jenkins</groupId>
   <artifactId>cloudtest</artifactId>
-  <version>2.24-SNAPSHOT</version>
+  <version>3.0</version>
   <packaging>hpi</packaging>
   <name>SOASTA CloudTest Plugin</name>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/SOASTA+CloudTest+Plugin</url>
@@ -43,7 +43,7 @@
   	<dependency>
 	    <groupId>org.jenkins-ci.plugins</groupId>
 	    <artifactId>junit</artifactId>
-	    <version>1.5</version>
+	    <version>1.27</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -70,8 +70,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>2.5</version>
       </plugin>
     </plugins>
   </build>
+
+  <!-- <properties>
+    <java.level>8</java.level>
+    <jenkins.version>2.73.3</jenkins.version>
+  </properties> -->
+  
 </project>

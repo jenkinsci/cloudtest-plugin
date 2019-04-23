@@ -12,11 +12,14 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.QuotedStringTokenizer;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -88,45 +91,17 @@ public class ImportFiles extends AbstractSCommandBuilder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        ArgumentListBuilder args = getSCommandArgs(build, listener);
-
-        args.add("cmd=import");
-        
-        if (mode != null)
-            args.add("mode=" + mode);
-        
-        String includes = convertFileListToIncludePattern(files);
-        
-        FilePath[] filePaths = build.getWorkspace().list(includes, excludes);
-        
-        if (filePaths.length == 0) {
-            // Didn't match anything.
-            // No work required.
-          
-            // Give the user a heads-up.
-            listener.error("Import pattern did not match any files.");
-            return true;
-        }
-
-        for (FilePath filePath : filePaths) {
-            args.add("file=" + filePath.getRemote());
-        }
-
-        EnvVars envs = build.getEnvironment(listener);
-        args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
-        
-        // Run it!
-        int exitCode = launcher
-            .launch()
-            .cmds(args)
-            .pwd(build.getWorkspace())
-            .stdout(listener)
-            .join();
-
-        return exitCode == 0;
+      FilePath filePath = build.getWorkspace();
+      if(filePath == null) {
+          return false;
+      }else {
+          perform(build, filePath, launcher, listener);
+          return true;
+      }
     }
 
     @Extension
+    @Symbol("import")
     public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
@@ -163,4 +138,46 @@ public class ImportFiles extends AbstractSCommandBuilder {
     }
 
     private static final Logger LOGGER = Logger.getLogger(ImportFiles.class.getName());
+
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException
+    {
+      ArgumentListBuilder args = getSCommandArgs(run, workspace, listener);
+
+      args.add("cmd=import");
+      
+      if (mode != null)
+          args.add("mode=" + mode);
+      
+      String includes = convertFileListToIncludePattern(files);
+      
+      FilePath[] filePaths = workspace.list(includes, excludes);
+      
+      if (filePaths.length == 0) {
+          // Didn't match anything.
+          // No work required.
+        
+          // Give the user a heads-up.
+          listener.error("Import pattern did not match any files.");
+          return;
+      }
+
+      for (FilePath filePath : filePaths) {
+          args.add("file=" + filePath.getRemote());
+      }
+
+      EnvVars envs = run.getEnvironment(listener);
+      args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
+      
+      // Run it!
+      int exitCode = launcher
+          .launch()
+          .cmds(args)
+          .pwd(workspace)
+          .stdout(listener)
+          .join();
+
+      return;
+      
+    }
 }

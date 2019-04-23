@@ -15,6 +15,7 @@ import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
+import hudson.model.Run;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.util.ArgumentListBuilder;
@@ -33,6 +34,7 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -40,6 +42,7 @@ import org.kohsuke.stapler.QueryParameter;
 /**
  * @author Kohsuke Kawaguchi
  */
+@SuppressWarnings("deprecation")
 public class TestCompositionRunner extends AbstractSCommandBuilder {
     /**
      * Composition to execute.
@@ -102,103 +105,114 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
 
         return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions, thresholds, generatePlotCSV);
     }
+    
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException
+    {
+   // Create a unique sub-directory to store all test results.
+      String resultsDir = "." + getClass().getName();
+      
+      // Split by newline.
+      EnvVars envs = run.getEnvironment(listener);
+      String[] compositions = envs.expand(this.composition).split("[\r\n]+");
+      String additionalOptionsExpanded = additionalOptions == null ? 
+          null : envs.expand(additionalOptions);
+      String[] options = additionalOptionsExpanded == null ?
+          null : new QuotedStringTokenizer(additionalOptionsExpanded).toArray();
+
+      for (String composition : compositions) {
+          ArgumentListBuilder args = getSCommandArgs(run, workspace, listener);
+
+          args.add("cmd=play", "wait", "format=junitxml")
+              .add("name=" + composition);
+          
+          // if thresholds are included in this post-build action, add them to scommand arguments 
+          if (thresholds != null) {
+              displayTransactionThreholds(listener.getLogger());
+            
+              for (TransactionThreshold threshold : thresholds) {
+                  args.add("validation=" + threshold.toScommandString());
+              }
+          }
+          
+          String fileName = composition + ".xml";
+
+          // Strip off any leading slash characters (composition names
+          // will typically be the full CloudTest folder path).
+          if (fileName.startsWith("/")) {
+              fileName = fileName.substring(1);
+          }
+
+          // Put the file in the test results directory.
+          fileName = resultsDir + File.separator + fileName;
+          
+          FilePath xml = new FilePath(workspace, fileName);
+          
+          // Make sure the directory exists.
+          xml.getParent().mkdirs();
+
+          // Add the additional options to the composition if there are any.
+          if (options != null) {
+              args.add(options);
+          }
+
+          if (generatePlotCSV) {
+              args.add("outputthresholdcsvdir=" + workspace);
+          }
+
+          // Run it!
+          launcher.launch()
+              .cmds(args)
+              .pwd(workspace)
+              .stdout(xml.write())
+              .stderr(listener.getLogger())
+              .join();
+
+          if (xml.length() == 0) {
+              // SCommand did not produce any output.
+              // This should never happen, but just in case...
+              return;
+          }
+
+          if (deleteOldResults) {
+              // Run SCommand again to clean up the old results.
+              args = getSCommandArgs(run, workspace, listener);
+
+              args.add("cmd=delete", "type=result")
+                  .add("path=" + composition)
+                  .add("maxage=" + maxDaysOfResults);
+
+              launcher
+                  .launch()
+                  .cmds(args)
+                  .pwd(workspace)
+                  .stdout(listener)
+                  .stderr(listener.getLogger())
+                  .join();
+          }
+      }
+      
+      // Now that we've finished running all the compositions, pass
+      // the results directory off to the JUnit archiver.
+      String resultsPattern = resultsDir + "/**/*.xml";
+      JUnitResultArchiver archiver = new JUnitResultArchiver(
+          resultsPattern,
+          true,
+          new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(
+              Saveable.NOOP,
+              Collections.singleton(new JunitResultPublisher(null))));
+      archiver.perform(run, workspace, launcher, listener);
+    }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        // Create a unique sub-directory to store all test results.
-        String resultsDir = "." + getClass().getName();
-        
-        // Split by newline.
-        EnvVars envs = build.getEnvironment(listener);
-        String[] compositions = envs.expand(this.composition).split("[\r\n]+");
-        String additionalOptionsExpanded = additionalOptions == null ? 
-            null : envs.expand(additionalOptions);
-        String[] options = additionalOptionsExpanded == null ?
-            null : new QuotedStringTokenizer(additionalOptionsExpanded).toArray();
-  
-        for (String composition : compositions) {
-            ArgumentListBuilder args = getSCommandArgs(build, listener);
-
-            args.add("cmd=play", "wait", "format=junitxml")
-                .add("name=" + composition);
-            
-            // if thresholds are included in this post-build action, add them to scommand arguments 
-            if (thresholds != null) {
-                displayTransactionThreholds(listener.getLogger());
-              
-                for (TransactionThreshold threshold : thresholds) {
-                    args.add("validation=" + threshold.toScommandString());
-                }
-            }
-            
-            String fileName = composition + ".xml";
-  
-            // Strip off any leading slash characters (composition names
-            // will typically be the full CloudTest folder path).
-            if (fileName.startsWith("/")) {
-                fileName = fileName.substring(1);
-            }
-
-            // Put the file in the test results directory.
-            fileName = resultsDir + File.separator + fileName;
-            
-            FilePath xml = new FilePath(build.getWorkspace(), fileName);
-            
-            // Make sure the directory exists.
-            xml.getParent().mkdirs();
-
-            // Add the additional options to the composition if there are any.
-            if (options != null) {
-                args.add(options);
-            }
-
-            if (generatePlotCSV) {
-                args.add("outputthresholdcsvdir=" + build.getWorkspace());
-            }
-
-            // Run it!
-            int exitCode = launcher
-                .launch()
-                .cmds(args)
-                .pwd(build.getWorkspace())
-                .stdout(xml.write())
-                .stderr(listener.getLogger())
-                .join();
-
-            if (xml.length() == 0) {
-                // SCommand did not produce any output.
-                // This should never happen, but just in case...
-                return false;
-            }
-
-            if (deleteOldResults) {
-                // Run SCommand again to clean up the old results.
-                args = getSCommandArgs(build, listener);
-
-                args.add("cmd=delete", "type=result")
-                    .add("path=" + composition)
-                    .add("maxage=" + maxDaysOfResults);
-
-                launcher
-                    .launch()
-                    .cmds(args)
-                    .pwd(build.getWorkspace())
-                    .stdout(listener)
-                    .stderr(listener.getLogger())
-                    .join();
-            }
-        }
-        
-        // Now that we've finished running all the compositions, pass
-        // the results directory off to the JUnit archiver.
-        String resultsPattern = resultsDir + "/**/*.xml";
-        JUnitResultArchiver archiver = new JUnitResultArchiver(
-            resultsPattern,
-            true,
-            new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(
-                Saveable.NOOP,
-                Collections.singleton(new JunitResultPublisher(null))));
-        return archiver.perform(build,launcher,listener);
+      FilePath filePath = build.getWorkspace();
+      if(filePath == null) {
+          return false;
+      }else {
+          perform(build, filePath, launcher, listener);
+          return true;
+      }
     }
     
     private void displayTransactionThreholds(PrintStream jenkinsLogger) {
@@ -213,6 +227,7 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     }
        
     @Extension
+    @Symbol("playComposition")
     public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
@@ -300,6 +315,8 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
             return maxDaysOfResults;
         }
     }
-
+    
+    
+    
     private static final Logger LOGGER = Logger.getLogger(TestCompositionRunner.class.getName());
 }

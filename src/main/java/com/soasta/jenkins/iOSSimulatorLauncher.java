@@ -12,10 +12,13 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.tasks.SimpleBuildStep;
 
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -24,7 +27,7 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-public class iOSSimulatorLauncher extends Builder {
+public class iOSSimulatorLauncher extends Builder implements SimpleBuildStep {
     /**
      * URL of {@link CloudTestServer}.
      */
@@ -80,18 +83,18 @@ public class iOSSimulatorLauncher extends Builder {
 
         return new iOSSimulatorLauncher(url, s.getId(), app, sdk, family);
     }
-
+    
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         ArgumentListBuilder args = new ArgumentListBuilder();
 
-        EnvVars envs = build.getEnvironment(listener);
+        EnvVars envs = run.getEnvironment(listener);
 
         CloudTestServer server = getServer();
         if (server == null)
             throw new AbortException("No TouchTest server is configured in the system configuration.");
 
-        FilePath bin = new iOSAppInstallerInstaller(server).ios_sim_launcher(build.getBuiltOn(), listener);
+        FilePath bin = new iOSAppInstallerInstaller(server).ios_sim_launcher(workspace.toComputer().getNode(), listener);
 
         // Determine TouchTest Agent URL for this server.
         // The simulator will automatically open this URL
@@ -113,8 +116,18 @@ public class iOSSimulatorLauncher extends Builder {
         if (family != null && !family.trim().isEmpty())
             args.add("--family", envs.expand(family));
 
-        int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
-        return r==0;
+        launcher.launch().cmds(args).pwd(workspace).stdout(listener).join();
+    }
+
+    @Override
+    public final boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+      FilePath filePath = build.getWorkspace();
+      if(filePath == null) {
+          return false;
+      } else {
+          perform(build, filePath, launcher, listener);
+          return true;
+      }
     }
 
     @Extension

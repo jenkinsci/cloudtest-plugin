@@ -12,7 +12,6 @@ import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstaller;
 
 import java.io.IOException;
-import java.net.URL;
 
 /**
  * Installs "iOS App Installer" from CloudTest.

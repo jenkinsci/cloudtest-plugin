@@ -7,7 +7,11 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
+import jenkins.tasks.SimpleBuildStep;
+
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 
@@ -20,7 +24,7 @@ import java.io.*;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Recorder;
 
-public abstract class CloudCommandBasePostBuild extends Recorder
+public abstract class CloudCommandBasePostBuild extends Recorder implements SimpleBuildStep
 {
   private final String name;
   private final String cloudTestServerID;
@@ -66,69 +70,79 @@ public abstract class CloudCommandBasePostBuild extends Recorder
     return timeOut;
   }
   
+  @Override 
+  public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    String command = getCommand();
+    // Create a unique sub-directory to store all test results.
+      String resultsDir = "." + command;
+      // set the basic commands. 
+      ArgumentListBuilder args =
+      new CloudCommandBuilder()
+      .setWorkspace(workspace)
+      .setUrl(url)
+      .setListener(listener)
+      .setCloudTestServerID(cloudTestServerID)
+      .build();
+      
+      args.add("cmd=" + command, "wait=true", "format=xml")
+          .add("name=" + name);
+          
+      if (timeOut >= 0)
+      {
+        args.add("timeout=" + timeOut);
+      }
+      
+      String fileName = name + ".xml";
+
+      // Strip off any leading slash characters (composition names
+      // will typically be the full CloudTest folder path).
+      if (fileName.startsWith("/")) {
+          fileName = fileName.substring(1);
+      }
+
+      // Put the file in the test results directory.
+      fileName = resultsDir + File.separator + fileName;
+      
+      FilePath xml = new FilePath(workspace, fileName);
+      
+      // Make sure the directory exists.
+      xml.getParent().mkdirs();
+
+      // Run it!
+      launcher.launch()
+          .cmds(args)
+          .pwd(workspace)
+          .stdout(xml.write())
+          .stderr(listener.getLogger())
+          .join();
+
+      if (xml.length() == 0)
+      {
+          // SCommand did not produce any output.
+          // This should never happen, but just in case...
+          return;
+      }
+
+      try
+      {
+        isSucessful(xml.readToString());
+      }
+      catch (Exception e)
+      {
+        e.printStackTrace();
+        
+        return;
+      }
+  }
+  
   @Override
   public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-    String command = getCommand();
-  // Create a unique sub-directory to store all test results.
-    String resultsDir = "." + command;
-    // set the basic commands. 
-    ArgumentListBuilder args =
-    new CloudCommandBuilder()
-    .setBuild(build)
-    .setUrl(url)
-    .setListener(listener)
-    .setCloudTestServerID(cloudTestServerID)
-    .build();
-    
-    args.add("cmd=" + command, "wait=true", "format=xml")
-        .add("name=" + name);
-        
-    if (timeOut >= 0)
-    {
-      args.add("timeout=" + timeOut);
-    }
-    
-    String fileName = name + ".xml";
-
-    // Strip off any leading slash characters (composition names
-    // will typically be the full CloudTest folder path).
-    if (fileName.startsWith("/")) {
-        fileName = fileName.substring(1);
-    }
-
-    // Put the file in the test results directory.
-    fileName = resultsDir + File.separator + fileName;
-    
-    FilePath xml = new FilePath(build.getWorkspace(), fileName);
-    
-    // Make sure the directory exists.
-    xml.getParent().mkdirs();
-
-    // Run it!
-    int exitCode = launcher
-        .launch()
-        .cmds(args)
-        .pwd(build.getWorkspace())
-        .stdout(xml.write())
-        .stderr(listener.getLogger())
-        .join();
-
-    if (xml.length() == 0)
-    {
-        // SCommand did not produce any output.
-        // This should never happen, but just in case...
+    FilePath filePath = build.getWorkspace();
+    if(filePath == null) {
         return false;
-    }
-
-    try
-    {
-      return isSucessful(xml.readToString());
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-      
-      return false;
+    } else {
+        perform(build, filePath, launcher, listener);
+        return true;
     }
   }
   /**

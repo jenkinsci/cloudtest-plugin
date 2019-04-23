@@ -13,23 +13,28 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.JDK;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.QuotedStringTokenizer;
+import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildStep;
 
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class MakeAppTouchTestable extends Builder {
+public class MakeAppTouchTestable extends Builder implements SimpleBuildStep {
     /**
      * URL of the server to use (deprecated).
      */
@@ -125,13 +130,24 @@ public class MakeAppTouchTestable extends Builder {
         return new MakeAppTouchTestable(url, s.getId(), inputType.getInputType(), projectFile, 
             target, launchURL, backupModifiedFiles, additionalOptions, javaOptions);
     }
+    
+    @Override
+    public final boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+      FilePath filePath = build.getWorkspace();
+      if(filePath == null) {
+          return false;
+      } else {
+          perform(build, filePath, launcher, listener);
+          return true;
+      }
+    }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         ArgumentListBuilder args = new ArgumentListBuilder();
-        JDK java = build.getProject().getJDK();
-        if (java!=null)
-            args.add(java.getHome()+"/bin/java");
+        List<JDK> javas = Jenkins.getInstance().getJDKs();
+        if (javas.size() != 0)
+            args.add(javas.get(0).getHome()+"/bin/java");
         else
             args.add("java");
 
@@ -139,9 +155,9 @@ public class MakeAppTouchTestable extends Builder {
         if (s==null)
             throw new AbortException("No TouchTest server is configured in the system configuration.");
 
-        EnvVars envs = build.getEnvironment(listener);
+        EnvVars envs = run.getEnvironment(listener);
 
-        FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(build.getBuiltOn(), listener);
+        FilePath path = new MakeAppTouchTestableInstaller(s).performInstallation(workspace.toComputer().getNode(), listener);
 
         args.add(DEFAULT_JAVA_OPTION)
             .add(new QuotedStringTokenizer(envs.expand(javaOptions)).toArray())
@@ -174,8 +190,7 @@ public class MakeAppTouchTestable extends Builder {
 
         args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
 
-        int r = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
-        return r==0;
+        launcher.launch().cmds(args).pwd(workspace).stdout(listener).join();
     }
 
     @Extension

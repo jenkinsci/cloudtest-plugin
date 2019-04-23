@@ -6,10 +6,10 @@ package com.soasta.jenkins.cloud.build;
 
 import hudson.Extension;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.soasta.jenkins.cloud.CloudStatus;
-import com.soasta.jenkins.cloud.postbuild.CloudCommandBasePostBuild;
 
 
 public class StartRSDB extends CloudCommandBaseBuild
@@ -21,6 +21,7 @@ public class StartRSDB extends CloudCommandBaseBuild
   }
  
   @Extension
+  @Symbol("startRSDB")
   public static class DescriptorImpl extends AbstractCloudCommandBuildDescriptor
   {
       @Override

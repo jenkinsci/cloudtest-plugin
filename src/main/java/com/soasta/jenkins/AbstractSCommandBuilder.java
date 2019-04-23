@@ -8,15 +8,16 @@ import java.io.IOException;
 import java.net.URL;
 
 import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildStep;
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.ProxyConfiguration;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 
-public abstract class AbstractSCommandBuilder extends Builder {
+public abstract class AbstractSCommandBuilder extends Builder implements SimpleBuildStep {
     /**
      * URL of the server to use (deprecated).
      */
@@ -44,13 +45,13 @@ public abstract class AbstractSCommandBuilder extends Builder {
         return cloudTestServerID;
     }
 
-    protected ArgumentListBuilder getSCommandArgs(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
+    protected ArgumentListBuilder getSCommandArgs(Run<?, ?> run, FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
       CloudTestServer s = getServer();
       if (s == null)
           throw new AbortException("No TouchTest server is configured in the system configuration.");
   
       // Download SCommand, if needed.
-      FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
+      FilePath scommand = new SCommandInstaller(s).scommand(workspace.toComputer().getNode(), listener);
   
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand);

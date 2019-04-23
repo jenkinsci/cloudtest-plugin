@@ -5,21 +5,12 @@
 package com.soasta.jenkins.cloud.postbuild;
 
 import hudson.Extension;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.util.FormValidation;
 
-import java.io.IOException;
-import java.util.logging.Logger;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 
-import com.soasta.jenkins.AbstractCloudTestBuilderDescriptor;
 import com.soasta.jenkins.cloud.CloudStatus;
-
-import hudson.tasks.Builder;
 
 public class StartRSDB extends CloudCommandBasePostBuild
 {
@@ -30,6 +21,7 @@ public class StartRSDB extends CloudCommandBasePostBuild
   }
  
   @Extension
+  @Symbol("startRSDB")
   public static class DescriptorImpl extends AbstractCloudCommandPostBuildDescriptor
   {
       @Override

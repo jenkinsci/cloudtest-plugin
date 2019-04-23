@@ -4,10 +4,8 @@
  */
 package com.soasta.jenkins.cloud;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.regex.Pattern;
 
 import com.soasta.jenkins.CloudTestServer;
 import com.soasta.jenkins.ProxyChecker;
@@ -17,9 +15,7 @@ import jenkins.model.Jenkins;
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.ProxyConfiguration;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.tasks.Builder;
+import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 
 public class CloudCommandBuilder {
@@ -32,8 +28,8 @@ public class CloudCommandBuilder {
      * @see CloudTestServer
      */
     private String cloudTestServerID;
-    private AbstractBuild<?, ?> build;
-    private BuildListener listener;
+    private TaskListener listener;
+    private FilePath workspace;
 
     public CloudTestServer getServer() {
         return CloudTestServer.getByID(cloudTestServerID);
@@ -59,13 +55,13 @@ public class CloudCommandBuilder {
         return cloudTestServerID;
     }
     
-    public CloudCommandBuilder setBuild(AbstractBuild<?, ?> build)
+    public CloudCommandBuilder setWorkspace(FilePath workspace)
     {
-      this.build = build;
+      this.workspace = workspace;
       return this;
     }
     
-    public CloudCommandBuilder setListener(BuildListener listener)
+    public CloudCommandBuilder setListener(TaskListener listener)
     {
       this.listener = listener;
       return this;
@@ -76,7 +72,7 @@ public class CloudCommandBuilder {
       if (s == null)
           throw new AbortException("No TouchTest server is configured in the system configuration.");
       
-      FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
+      FilePath scommand = new SCommandInstaller(s).scommand(workspace.toComputer().getNode(), listener);
       
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand)

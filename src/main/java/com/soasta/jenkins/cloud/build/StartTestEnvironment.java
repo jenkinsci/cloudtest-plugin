@@ -6,10 +6,10 @@ package com.soasta.jenkins.cloud.build;
 
 import hudson.Extension;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.soasta.jenkins.cloud.CloudStatus;
-import com.soasta.jenkins.cloud.postbuild.CloudCommandBasePostBuild;
 
 
 public class StartTestEnvironment extends CloudCommandBaseBuild
@@ -22,6 +22,7 @@ public class StartTestEnvironment extends CloudCommandBaseBuild
   }
   
   @Extension
+  @Symbol("startTestEnvironment")
   public static class DescriptorImpl extends AbstractCloudCommandBuildDescriptor
   {
       @Override

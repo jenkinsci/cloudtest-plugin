@@ -5,6 +5,8 @@
 package com.soasta.jenkins.cloud.postbuild;
 
 import hudson.Extension;
+
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.soasta.jenkins.cloud.CloudStatus;
@@ -19,6 +21,7 @@ public class StartGrid extends CloudCommandBasePostBuild
   }
   
   @Extension
+  @Symbol("startGrid")
   public static class DescriptorImpl extends AbstractCloudCommandPostBuildDescriptor
   {
       @Override
