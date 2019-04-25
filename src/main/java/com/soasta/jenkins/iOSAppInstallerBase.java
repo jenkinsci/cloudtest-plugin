@@ -11,12 +11,15 @@ import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.QuotedStringTokenizer;
+import jenkins.tasks.SimpleBuildStep;
 
-public abstract class iOSAppInstallerBase extends Builder {
+public abstract class iOSAppInstallerBase extends Builder implements SimpleBuildStep {
   /**
    * URL of the server to use (deprecated).
    */
@@ -51,25 +54,36 @@ public abstract class iOSAppInstallerBase extends Builder {
   }
   
   protected abstract void addArgs(EnvVars envs, ArgumentListBuilder args);
-
+  
   @Override
-  public final boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+  public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
       ArgumentListBuilder args = new ArgumentListBuilder();
   
-      EnvVars envs = build.getEnvironment(listener);
+      EnvVars envs = run.getEnvironment(listener);
   
       CloudTestServer s = getServer();
       if (s == null)
           throw new AbortException("No TouchTest server is configured in the system configuration.");
   
-      FilePath bin = new iOSAppInstallerInstaller(s).ios_app_installer(build.getBuiltOn(), listener);
+      FilePath bin = new iOSAppInstallerInstaller(s).ios_app_installer(workspace.toComputer().getNode(), listener);
   
       args.add(bin);
       addArgs(envs, args);
       args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
   
-      int exitCode = launcher.launch().cmds(args).pwd(build.getWorkspace()).stdout(listener).join();
+      launcher.launch().cmds(args).pwd(workspace).stdout(listener).join();
 
-      return exitCode == 0;
+      return;
+  }
+
+  @Override
+  public final boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    FilePath filePath = build.getWorkspace();
+    if(filePath == null) {
+        return false;
+    } else {
+        perform(build, filePath, launcher, listener);
+        return true;
+    }
   }
 }

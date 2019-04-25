@@ -7,50 +7,59 @@ package com.soasta.jenkins;
 import java.io.IOException;
 import java.net.URL;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
 import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildStep;
 import hudson.AbortException;
 import hudson.FilePath;
 import hudson.ProxyConfiguration;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.util.ArgumentListBuilder;
 
-public abstract class AbstractSCommandBuilder extends Builder {
+public abstract class AbstractSCommandBuilder extends Builder implements SimpleBuildStep {
     /**
      * URL of the server to use (deprecated).
      */
-    private final String url;
+    private String url;
     /**
      * ID of the server to use.
      * @see CloudTestServer
      */
     private final String cloudTestServerID;
 
-    public AbstractSCommandBuilder(String url, String cloudTestServerID) {
-        this.url = url;
+    public AbstractSCommandBuilder(String cloudTestServerID) {
         this.cloudTestServerID = cloudTestServerID;
     }
 
     public CloudTestServer getServer() {
         return CloudTestServer.getByID(cloudTestServerID);
     }
+    
+    @DataBoundSetter
+    public final void setUrl(String url)
+    {
+      this.url = url;
+    }
 
-    public String getUrl() {
+    public final String getUrl() {
         return url;
     }
 
-    public String getCloudTestServerID() {
+    public final String getCloudTestServerID() {
         return cloudTestServerID;
     }
 
-    protected ArgumentListBuilder getSCommandArgs(AbstractBuild<?, ?> build, BuildListener listener) throws IOException, InterruptedException {
+    protected ArgumentListBuilder getSCommandArgs(Run<?, ?> run, FilePath workspace, TaskListener listener) throws IOException, InterruptedException {
       CloudTestServer s = getServer();
       if (s == null)
           throw new AbortException("No TouchTest server is configured in the system configuration.");
   
       // Download SCommand, if needed.
-      FilePath scommand = new SCommandInstaller(s).scommand(build.getBuiltOn(), listener);
+      FilePath scommand = new SCommandInstaller(s).scommand(workspace.toComputer().getNode(), listener);
   
       ArgumentListBuilder args = new ArgumentListBuilder();
       args.add(scommand);

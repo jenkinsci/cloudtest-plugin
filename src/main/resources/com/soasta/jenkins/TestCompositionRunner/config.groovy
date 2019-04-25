@@ -11,7 +11,7 @@ f.entry(title:"Composition(s)",field:"composition") {
 
 f.advanced {
 
-  f.optionalBlock(title:"Delete old results from the CloudTest server",field:"deleteOldResults") {
+  f.optionalBlock(title:"Delete old results from the CloudTest server",field:"deleteOldResultsSettings") {
     f.entry(title:"Days to keep results",field:"maxDaysOfResults") {
       f.number()
     }

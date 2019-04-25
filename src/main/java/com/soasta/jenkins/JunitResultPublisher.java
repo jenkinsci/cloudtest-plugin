@@ -6,9 +6,12 @@ package com.soasta.jenkins;
 
 import hudson.Launcher;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestAction;
@@ -34,10 +37,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
+
 
 @SuppressWarnings("deprecation")
 public class JunitResultPublisher extends TestDataPublisher
@@ -66,10 +71,28 @@ public class JunitResultPublisher extends TestDataPublisher
   {
     return urlOverride;
   }
-
+  
+  /**
+   * Called by Jenkins when rendering the job configuration page.
+   * @return the current URL override (if any).
+   */
+  public final void setUrlOverride(String override)
+  {
+    urlOverride = override;
+  }
+  
   @Override
-  public TestResultAction.Data getTestData(AbstractBuild<?, ?> build,
-    Launcher launcher, BuildListener listener, TestResult testResult) throws IOException
+  public TestResultAction.Data getTestData(AbstractBuild<?, ?> abstractBuild, Launcher launcher, BuildListener buildListener, TestResult testResult) throws IOException, InterruptedException {
+    FilePath filePath = abstractBuild.getWorkspace();
+    if(filePath == null) {
+        return null;
+    }else {
+        return contributeTestData(abstractBuild, filePath, launcher, buildListener, testResult);
+    }
+  }
+
+  public TestResultAction.Data contributeTestData(Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher,
+    TaskListener listener, TestResult testResult) throws IOException
   {
     Data data = new Data();
 
@@ -81,7 +104,7 @@ public class JunitResultPublisher extends TestDataPublisher
       String fileName = sr.getFile();
 
       // Get local path of the build's workspace.
-      String workspacePath = build.getWorkspace().getRemote();
+      String workspacePath = workspace.getRemote();
 
       // Check if there is a file to parse through
       if (fileName == null || fileName.isEmpty())
@@ -99,7 +122,7 @@ public class JunitResultPublisher extends TestDataPublisher
           // Load the JUnit XML file contents.  If the build is
           // on a slave, then this will load over the network.
           String relativePath = fileName.substring(workspacePath.length() + 1);
-          String fileContent = build.getWorkspace().child(relativePath).readToString();
+          String fileContent = workspace.child(relativePath).readToString();
           Document junitXML = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(fileContent)));
 
           XPath xPath = XPathFactory.newInstance().newXPath();

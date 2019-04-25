@@ -12,13 +12,17 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.QuotedStringTokenizer;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
@@ -33,7 +37,7 @@ public class ImportFiles extends AbstractSCommandBuilder {
     /**
      * Possibly null 'excludes' pattern as in Ant.
      */
-    private final String excludes;
+    private String excludes;
     
     /**
      * How to handle duplicates (if any).
@@ -43,15 +47,13 @@ public class ImportFiles extends AbstractSCommandBuilder {
     /**
      * Additional parameters to pass to SCommand (if any).
      */
-    private final String additionalOptions;
+    private String additionalOptions;
 
     @DataBoundConstructor
-    public ImportFiles(String url, String cloudTestServerID, String files, String excludes, String mode, String additionalOptions) {
-        super(url, cloudTestServerID);
+    public ImportFiles(String cloudTestServerID, String files, String mode) {
+        super(cloudTestServerID);
         this.files = files.trim();
-        this.excludes = Util.fixEmptyAndTrim(excludes);
         this.mode = mode;
-        this.additionalOptions = additionalOptions;
     }
 
     public String getFiles() {
@@ -62,12 +64,25 @@ public class ImportFiles extends AbstractSCommandBuilder {
         return excludes;
     }
     
+    
     public String getMode() {
         return mode;
     }
     
     public String getAdditionalOptions() {
-        return additionalOptions;
+      return Util.fixEmptyAndTrim(additionalOptions);
+    }
+    
+    @DataBoundSetter
+    public void setAdditionalOptions(String additionalOptions)
+    {
+      this.additionalOptions = additionalOptions;
+    }
+    
+    @DataBoundSetter
+    public void setExcludes(String excludes)
+    {
+      this.excludes = Util.fixEmptyAndTrim(excludes);
     }
 
     public Object readResolve() throws IOException {
@@ -83,50 +98,25 @@ public class ImportFiles extends AbstractSCommandBuilder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new ImportFiles(getUrl(), s.getId(), files, excludes, mode, additionalOptions);
+        ImportFiles result = new ImportFiles(s.getId(), files, mode);
+        result.setExcludes(excludes);
+        result.setAdditionalOptions(additionalOptions);
+        return result;
     }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        ArgumentListBuilder args = getSCommandArgs(build, listener);
-
-        args.add("cmd=import");
-        
-        if (mode != null)
-            args.add("mode=" + mode);
-        
-        String includes = convertFileListToIncludePattern(files);
-        
-        FilePath[] filePaths = build.getWorkspace().list(includes, excludes);
-        
-        if (filePaths.length == 0) {
-            // Didn't match anything.
-            // No work required.
-          
-            // Give the user a heads-up.
-            listener.error("Import pattern did not match any files.");
-            return true;
-        }
-
-        for (FilePath filePath : filePaths) {
-            args.add("file=" + filePath.getRemote());
-        }
-
-        EnvVars envs = build.getEnvironment(listener);
-        args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
-        
-        // Run it!
-        int exitCode = launcher
-            .launch()
-            .cmds(args)
-            .pwd(build.getWorkspace())
-            .stdout(listener)
-            .join();
-
-        return exitCode == 0;
+      FilePath filePath = build.getWorkspace();
+      if(filePath == null) {
+          return false;
+      }else {
+          perform(build, filePath, launcher, listener);
+          return true;
+      }
     }
 
     @Extension
+    @Symbol("importFiles")
     public static class DescriptorImpl extends AbstractCloudTestBuilderDescriptor {
         @Override
         public String getDisplayName() {
@@ -163,4 +153,48 @@ public class ImportFiles extends AbstractSCommandBuilder {
     }
 
     private static final Logger LOGGER = Logger.getLogger(ImportFiles.class.getName());
+
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException
+    {
+      ArgumentListBuilder args = getSCommandArgs(run, workspace, listener);
+
+      args.add("cmd=import");
+      
+      if (mode != null)
+          args.add("mode=" + mode);
+      
+      String includes = convertFileListToIncludePattern(files);
+      
+      FilePath[] filePaths = workspace.list(includes, excludes);
+      
+      if (filePaths.length == 0) {
+          // Didn't match anything.
+          // No work required.
+        
+          // Give the user a heads-up.
+          listener.error("Import pattern did not match any files.");
+          return;
+      }
+
+      for (FilePath filePath : filePaths) {
+          args.add("file=" + filePath.getRemote());
+      }
+
+      EnvVars envs = run.getEnvironment(listener);
+      if(additionalOptions != null)
+      {
+        args.add(new QuotedStringTokenizer(envs.expand(additionalOptions)).toArray());
+      }
+      
+      // Run it!
+      launcher.launch()
+          .cmds(args)
+          .pwd(workspace)
+          .stdout(listener)
+          .join();
+
+      return;
+      
+    }
 }

@@ -4,6 +4,7 @@
  */
 package com.soasta.jenkins;
 
+import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
@@ -12,11 +13,15 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
 import javax.inject.Inject;
+
+import org.jenkinsci.Symbol;
+
 import java.io.IOException;
 
 /**
  * @author Kohsuke Kawaguchi
  */
+
 public abstract class AbstractCloudTestBuilderDescriptor extends BuildStepDescriptor<Builder> {
     @Inject
     CloudTestServer.DescriptorImpl serverDescriptor;

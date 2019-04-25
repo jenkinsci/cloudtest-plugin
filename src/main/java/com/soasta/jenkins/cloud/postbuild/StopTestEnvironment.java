@@ -6,7 +6,7 @@ package com.soasta.jenkins.cloud.postbuild;
 
 import hudson.Extension;
 
-
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.soasta.jenkins.cloud.CloudStatus;
@@ -21,6 +21,7 @@ public class StopTestEnvironment extends CloudCommandBasePostBuild
   }
   
   @Extension
+  @Symbol("stopTestEnvironment")
   public static class DescriptorImpl extends AbstractCloudCommandPostBuildDescriptor
   {
       @Override
