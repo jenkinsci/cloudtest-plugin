@@ -7,6 +7,9 @@ package com.soasta.jenkins;
 import java.io.IOException;
 import java.net.URL;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import hudson.AbortException;
@@ -21,27 +24,32 @@ public abstract class AbstractSCommandBuilder extends Builder implements SimpleB
     /**
      * URL of the server to use (deprecated).
      */
-    private final String url;
+    private String url;
     /**
      * ID of the server to use.
      * @see CloudTestServer
      */
     private final String cloudTestServerID;
 
-    public AbstractSCommandBuilder(String url, String cloudTestServerID) {
-        this.url = url;
+    public AbstractSCommandBuilder(String cloudTestServerID) {
         this.cloudTestServerID = cloudTestServerID;
     }
 
     public CloudTestServer getServer() {
         return CloudTestServer.getByID(cloudTestServerID);
     }
+    
+    @DataBoundSetter
+    public final void setUrl(String url)
+    {
+      this.url = url;
+    }
 
-    public String getUrl() {
+    public final String getUrl() {
         return url;
     }
 
-    public String getCloudTestServerID() {
+    public final String getCloudTestServerID() {
         return cloudTestServerID;
     }
 

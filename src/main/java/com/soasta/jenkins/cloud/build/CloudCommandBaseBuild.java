@@ -23,7 +23,6 @@ import java.io.*;
 
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Builder;
-import hudson.tasks.Recorder;
 
 public abstract class CloudCommandBaseBuild extends Builder implements SimpleBuildStep
 {
@@ -56,17 +55,27 @@ public abstract class CloudCommandBaseBuild extends Builder implements SimpleBui
     }
   }
   
+  public final String getUrl()
+  {
+    return this.url;
+  }
+  
+  public final String cloudTestServerID()
+  {
+    return this.cloudTestServerID;
+  }
+  
   public String getCloudTestServerID()
   {
     return cloudTestServerID;
   }
   
-  public String getName()
+  public final String getName()
   {
     return name;
   }
   
-  public int getTimeOut()
+  public final int getTimeOut()
   {
     return timeOut;
   }
@@ -110,8 +119,7 @@ public abstract class CloudCommandBaseBuild extends Builder implements SimpleBui
       xml.getParent().mkdirs();
 
       // Run it!
-      int exitCode = launcher
-          .launch()
+      launcher.launch()
           .cmds(args)
           .pwd(workspace)
           .stdout(xml.write())

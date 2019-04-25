@@ -138,23 +138,11 @@
                 </j:choose>
                   </p>
                 
-                                            <a id="aid" href="#" onClick="myshow()">Click here to see the SOASTA CloudTest dashboard for this test</a>
+                                            <a id="aid" href="${it.Url}/Central?initResultsTab=${it.ResultID}" target="_blank">Click here to see the SOASTA CloudTest dashboard for this test</a>
                                             <br/>
                                             <br/>
 
-                            <div id="serr" style="display:none">
-							The CloudTest dashboard did not load properly because the CloudTest URL and the Jenkins URL are using different URL schemes.  
-							On most browsers, mixed-content blocking will be activated.  You can correct this by:<br/>
-							<br/><li>browsing to a version of Jenkins that uses the same scheme as your CloudTest URL (if available)</li>
-							<br/><li>changing the CloudTest URL in the Jenkins configuration to match the scheme used by Jenkins</li>
-							<br/><li>or, going directly to the result here: ${it.Url}/Central?initResultsTab=${it.ResultID}</li>
-                            </div>
-                            
-                                            
-                            <!-- If no mixed-content blocking issues, allow the viewer to directly see the result in the iframe provided below -->
-                            <iframe id="ifr" src="${it.Url}/Central?initResultsTab=${it.ResultID}" style="display:none" width="100%" height="1000"></iframe>
             </j:if>
-            
         </j:otherwise>
      </j:choose>
 

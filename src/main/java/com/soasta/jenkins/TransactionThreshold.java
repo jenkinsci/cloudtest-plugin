@@ -40,10 +40,9 @@ public class TransactionThreshold extends AbstractDescribableImpl<TransactionThr
    * @param transactionname - name of transaction
    * @param thresholdname - threshold name, picked from a list box
    * @param thresholdvalue - the threshold value
-   * @param thresholdid - a place holder for the threshold name, when it is needed to be loaded by the UI 
    */
   @DataBoundConstructor
-  public TransactionThreshold(String transactionname, String thresholdname, String thresholdvalue,String thresholdid) {
+  public TransactionThreshold(String transactionname, String thresholdname, String thresholdvalue) {
       this.thresholdname = thresholdname;
       this.thresholdvalue = thresholdvalue;
       this.transactionname = transactionname;

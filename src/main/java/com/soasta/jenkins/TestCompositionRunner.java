@@ -9,6 +9,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Launcher.LocalLauncher;
+import hudson.Util;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
 import hudson.model.Saveable;
@@ -36,6 +37,7 @@ import jenkins.model.Jenkins;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 
@@ -48,26 +50,27 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
      * Composition to execute.
      */
     private final String composition;
-    private final boolean deleteOldResults;
-    private final int maxDaysOfResults;
-    private final String additionalOptions;
-    private final List<TransactionThreshold> thresholds;
-    private final boolean generatePlotCSV;
+    private boolean deleteOldResults;
+    private int maxDaysOfResults;
+    private String additionalOptions;
+    private List<TransactionThreshold> thresholds;
+    private DeleteOldResultsSettings deleteOldResultsSettings;
+    private boolean generatePlotCSV;
      
     @DataBoundConstructor
-    public TestCompositionRunner(String url, String cloudTestServerID, String composition, DeleteOldResultsSettings deleteOldResults,
-      String additionalOptions, List<TransactionThreshold> thresholds, boolean generatePlotCSV) {
-        super(url, cloudTestServerID);
+    public TestCompositionRunner(String cloudTestServerID, String composition) {
+        super(cloudTestServerID);
         this.composition = composition;
-        this.deleteOldResults = (deleteOldResults != null);
-        this.maxDaysOfResults = (deleteOldResults == null ? 0 : deleteOldResults.maxDaysOfResults);
-        this.additionalOptions = additionalOptions;
-        this.thresholds = thresholds;
-        this.generatePlotCSV = generatePlotCSV;
     }
     
     public List<TransactionThreshold> getThresholds() {
         return thresholds;
+    }
+    
+    @DataBoundSetter
+    public void setThresholds(List<TransactionThreshold> thresholds)
+    {
+      this.thresholds = thresholds;
     }
     
     public String getComposition() {
@@ -83,11 +86,36 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
     }
 
     public String getAdditionalOptions() {
-        return additionalOptions;
+        return Util.fixEmptyAndTrim(additionalOptions);
+    }
+    
+    @DataBoundSetter
+    public void setAdditionalOptions(String additionalOptions)
+    {
+      this.additionalOptions = additionalOptions;
     }
 
     public boolean getGeneratePlotCSV() {
         return generatePlotCSV;
+    }
+    
+    @DataBoundSetter
+    public void setGeneratePlotCSV(boolean generatePlotCSV)
+    {
+      this.generatePlotCSV = generatePlotCSV;
+    }
+    
+    @DataBoundSetter
+    public final void setDeleteOldResultsSettings(DeleteOldResultsSettings deleteOldResultsSettings)
+    {
+      this.deleteOldResultsSettings = deleteOldResultsSettings;
+      this.deleteOldResults = (deleteOldResultsSettings != null);
+      this.maxDaysOfResults = (deleteOldResultsSettings == null ? 0 : deleteOldResultsSettings.maxDaysOfResults);
+    }
+    
+    public DeleteOldResultsSettings getDeleteOldResultsSettings()
+    {
+      return deleteOldResultsSettings;
     }
 
     public Object readResolve() throws IOException {
@@ -103,7 +131,19 @@ public class TestCompositionRunner extends AbstractSCommandBuilder {
 
         LOGGER.info("Matched server URL " + getUrl() + " to ID: " + s.getId() + "; re-creating.");
 
-        return new TestCompositionRunner(getUrl(), s.getId(), composition, deleteOldResults ? new DeleteOldResultsSettings(maxDaysOfResults) : null, additionalOptions, thresholds, generatePlotCSV);
+        TestCompositionRunner result = new TestCompositionRunner(s.getId(), composition);
+        if(deleteOldResults)
+        {
+          result.setDeleteOldResultsSettings(new DeleteOldResultsSettings(maxDaysOfResults));
+        }
+        result.setAdditionalOptions(additionalOptions);
+        result.setThresholds(thresholds);
+        result.setGeneratePlotCSV(generatePlotCSV);
+        if(getUrl() != null)
+        {
+          result.setUrl(getUrl());
+        }
+        return result;
     }
     
     @Override
