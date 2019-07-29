@@ -171,7 +171,7 @@ public class MakeAppTouchTestable extends Builder implements SimpleBuildStep {
                 .add(s.getApitoken()); 
         }
         else {
-            args.add("-username",s.getUsername()); 
+            args.add("-username",s.getUsername());
             
             if (s.getPassword() != null) {
                 args.add("-password")

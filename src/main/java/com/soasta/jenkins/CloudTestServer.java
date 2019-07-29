@@ -208,13 +208,16 @@ public class CloudTestServer extends AbstractDescribableImpl<CloudTestServer> {
         
         JSONObject obj =  new JSONObject();
         
-        if(apitoken.trim().isEmpty() && !username.trim().isEmpty() && password != null) {
+        boolean usingApiToken = apitoken != null && !apitoken.trim().isEmpty();
+        boolean usingUsernamePassword = username != null && !username.trim().isEmpty() && password != null && !password.getPlainText().trim().isEmpty();
+        
+        if(usingUsernamePassword) {
           obj.put("userName", username);
           obj.put("password", password.getPlainText());
         }
-        else if(!apitoken.trim().isEmpty() && username.trim().isEmpty() && password == null) {
+        else if(usingApiToken) {
             if(apitoken.length() != 36)
-              throw new IOException("Invalid API Token");
+              throw new IOException("Invalid API Token of length: " + apitoken.length() + ".");
             else
                obj.put("apiToken", apitoken);
         }
